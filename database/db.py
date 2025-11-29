@@ -17,3 +17,8 @@ class Base(DeclarativeBase):
 async def get_db() -> AsyncSession:
     async with async_session_factory() as session:
         yield session
+
+async def init_db():
+    async with engine.begin() as conn:
+        # await conn.run_sync(Base.metadata.drop_all) # Uncomment to reset DB
+        await conn.run_sync(Base.metadata.create_all)

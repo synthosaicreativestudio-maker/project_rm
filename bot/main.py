@@ -23,6 +23,9 @@ async def main():
     from bot.handlers.common import router as common_router
     dp.include_router(common_router)
 
+    from database.db import init_db
+    await init_db()
+
     try:
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
