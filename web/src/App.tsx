@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Bot, Image as ImageIcon, Video, Sparkles, Upload, X, Smartphone, Monitor, Film, Layers } from 'lucide-react'
+import { Bot, Image as ImageIcon, Video, Sparkles, Upload, X, Smartphone, Monitor, Film } from 'lucide-react'
 
 function App() {
     const [activeTab, setActiveTab] = useState('chat')
@@ -254,8 +254,8 @@ function App() {
                                     <button
                                         onClick={() => setVideoOrientation('9:16')}
                                         className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${videoOrientation === '9:16'
-                                                ? 'bg-neon-pink/20 border-neon-pink text-white'
-                                                : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
+                                            ? 'bg-neon-pink/20 border-neon-pink text-white'
+                                            : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
                                             }`}
                                     >
                                         <Smartphone size={18} />
@@ -264,8 +264,8 @@ function App() {
                                     <button
                                         onClick={() => setVideoOrientation('16:9')}
                                         className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${videoOrientation === '16:9'
-                                                ? 'bg-neon-pink/20 border-neon-pink text-white'
-                                                : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
+                                            ? 'bg-neon-pink/20 border-neon-pink text-white'
+                                            : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
                                             }`}
                                     >
                                         <Monitor size={18} />
