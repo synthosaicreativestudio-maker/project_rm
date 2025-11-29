@@ -135,7 +135,7 @@ function App() {
             </motion.header>
 
             {/* Main Content Area */}
-            <main className="w-full max-w-md flex-1 relative flex flex-col min-h-[60vh]">
+            <main className="w-full max-w-md flex-1 relative flex flex-col min-h-[60vh] pb-24">
                 <motion.div
                     key={activeTab}
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -441,7 +441,7 @@ function App() {
             </main>
 
             {/* Bottom Navigation */}
-            <nav className="w-full max-w-md mt-6 glass-panel rounded-2xl p-2 flex justify-around">
+            <nav className="fixed bottom-6 left-0 right-0 mx-auto w-[90%] max-w-md glass-panel rounded-2xl p-2 flex justify-around z-50 backdrop-blur-xl bg-black/40 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
                 <button
                     onClick={() => setActiveTab('chat')}
                     className={`p-3 rounded-xl transition-all ${activeTab === 'chat' ? 'bg-white/10 text-neon-blue shadow-[0_0_10px_rgba(0,243,255,0.3)]' : 'text-gray-400 hover:text-white'}`}
