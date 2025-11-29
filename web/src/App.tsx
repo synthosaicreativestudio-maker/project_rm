@@ -1,12 +1,39 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Bot, Image as ImageIcon, Video, Sparkles } from 'lucide-react'
+import { Bot, Image as ImageIcon, Video, Sparkles, Upload, X, Smartphone, Monitor, Film, Layers } from 'lucide-react'
 
 function App() {
     const [activeTab, setActiveTab] = useState('chat')
     const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([])
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
+
+    // Image Gen State
+    const [imagePrompt, setImagePrompt] = useState('')
+    const [aspectRatio, setAspectRatio] = useState('1:1')
+    const [resolution, setResolution] = useState('1K')
+    const [imageRefs, setImageRefs] = useState<File[]>([])
+
+    // Video Gen State
+    const [videoPrompt, setVideoPrompt] = useState('')
+    const [videoOrientation, setVideoOrientation] = useState('9:16')
+    const [videoRef, setVideoRef] = useState<File | null>(null)
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setImageRefs(prev => [...prev, ...Array.from(e.target.files!)])
+        }
+    }
+
+    const removeImageRef = (index: number) => {
+        setImageRefs(prev => prev.filter((_, i) => i !== index))
+    }
+
+    const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setVideoRef(e.target.files[0])
+        }
+    }
 
     const sendMessage = async () => {
         if (!input.trim()) return
@@ -131,31 +158,160 @@ function App() {
                     )}
 
                     {activeTab === 'image' && (
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                            <ImageIcon size={64} className="text-neon-purple mb-4 drop-shadow-[0_0_10px_rgba(188,19,254,0.5)]" />
-                            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-purple to-neon-pink">
-                                Image Gen
-                            </h2>
-                            <p className="text-gray-400 text-sm mb-8">
-                                Create stunning visuals with Gemini Vision.
-                            </p>
-                            <button className="glass-button px-6 py-3 rounded-xl w-full font-semibold text-neon-purple">
-                                Create Artwork
+                        <div className="flex flex-col h-full overflow-y-auto scrollbar-hide p-2">
+                            <div className="flex items-center justify-center mb-6">
+                                <ImageIcon size={48} className="text-neon-purple mr-3 drop-shadow-[0_0_10px_rgba(188,19,254,0.5)]" />
+                                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-purple to-neon-pink">
+                                    Image Gen
+                                </h2>
+                            </div>
+
+                            {/* Settings */}
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400 ml-1">Aspect Ratio</label>
+                                    <select
+                                        value={aspectRatio}
+                                        onChange={(e) => setAspectRatio(e.target.value)}
+                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                    >
+                                        <option value="1:1">1:1 (Square)</option>
+                                        <option value="16:9">16:9 (Landscape)</option>
+                                        <option value="9:16">9:16 (Portrait)</option>
+                                        <option value="4:3">4:3 (Classic)</option>
+                                        <option value="3:2">3:2 (Photo)</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400 ml-1">Resolution</label>
+                                    <select
+                                        value={resolution}
+                                        onChange={(e) => setResolution(e.target.value)}
+                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                    >
+                                        <option value="1K">1K (Standard)</option>
+                                        <option value="2K">2K (High)</option>
+                                        <option value="4K">4K (Ultra)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Reference Images */}
+                            <div className="mb-4">
+                                <label className="text-xs text-gray-400 ml-1 mb-1 block">Reference Images (Optional)</label>
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                    {imageRefs.map((file, idx) => (
+                                        <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-white/20 group">
+                                            <img src={URL.createObjectURL(file)} alt="ref" className="w-full h-full object-cover" />
+                                            <button
+                                                onClick={() => removeImageRef(idx)}
+                                                className="absolute top-0 right-0 bg-black/50 text-white p-0.5 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <label className="w-16 h-16 rounded-lg border border-dashed border-white/30 flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors">
+                                        <Upload size={20} className="text-gray-400" />
+                                        <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Prompt Input */}
+                            <div className="flex-1 flex flex-col mb-4">
+                                <label className="text-xs text-gray-400 ml-1 mb-1">Prompt</label>
+                                <textarea
+                                    value={imagePrompt}
+                                    onChange={(e) => setImagePrompt(e.target.value)}
+                                    placeholder="Describe your image in detail..."
+                                    className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-neon-purple/50 resize-none min-h-[100px]"
+                                />
+                            </div>
+
+                            <button className="glass-button px-6 py-3 rounded-xl w-full font-semibold text-neon-purple shadow-[0_0_15px_rgba(188,19,254,0.3)] hover:shadow-[0_0_25px_rgba(188,19,254,0.5)] transition-all">
+                                <span className="flex items-center justify-center gap-2">
+                                    <Sparkles size={18} />
+                                    Generate Artwork
+                                </span>
                             </button>
                         </div>
                     )}
 
                     {activeTab === 'video' && (
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                            <Video size={64} className="text-neon-pink mb-4 drop-shadow-[0_0_10px_rgba(255,0,255,0.5)]" />
-                            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-pink to-orange-500">
-                                Video Studio
-                            </h2>
-                            <p className="text-gray-400 text-sm mb-8">
-                                Generate videos from text or images.
-                            </p>
-                            <button className="glass-button px-6 py-3 rounded-xl w-full font-semibold text-neon-pink">
-                                Create Video
+                        <div className="flex flex-col h-full overflow-y-auto scrollbar-hide p-2">
+                            <div className="flex items-center justify-center mb-6">
+                                <Video size={48} className="text-neon-pink mr-3 drop-shadow-[0_0_10px_rgba(255,0,255,0.5)]" />
+                                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-pink to-orange-500">
+                                    Video Studio
+                                </h2>
+                            </div>
+
+                            {/* Orientation */}
+                            <div className="mb-4">
+                                <label className="text-xs text-gray-400 ml-1 mb-1 block">Orientation</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => setVideoOrientation('9:16')}
+                                        className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${videoOrientation === '9:16'
+                                                ? 'bg-neon-pink/20 border-neon-pink text-white'
+                                                : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
+                                            }`}
+                                    >
+                                        <Smartphone size={18} />
+                                        <span className="text-sm">Vertical</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setVideoOrientation('16:9')}
+                                        className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${videoOrientation === '16:9'
+                                                ? 'bg-neon-pink/20 border-neon-pink text-white'
+                                                : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
+                                            }`}
+                                    >
+                                        <Monitor size={18} />
+                                        <span className="text-sm">Horizontal</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Reference Image */}
+                            <div className="mb-4">
+                                <label className="text-xs text-gray-400 ml-1 mb-1 block">Reference Image (Optional)</label>
+                                {videoRef ? (
+                                    <div className="relative w-full h-32 rounded-xl overflow-hidden border border-white/20 group">
+                                        <img src={URL.createObjectURL(videoRef)} alt="ref" className="w-full h-full object-cover" />
+                                        <button
+                                            onClick={() => setVideoRef(null)}
+                                            className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <label className="w-full h-24 rounded-xl border border-dashed border-white/30 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors">
+                                        <Upload size={24} className="text-gray-400 mb-2" />
+                                        <span className="text-xs text-gray-400">Upload Reference Image</span>
+                                        <input type="file" accept="image/*" onChange={handleVideoUpload} className="hidden" />
+                                    </label>
+                                )}
+                            </div>
+
+                            {/* Prompt Input */}
+                            <div className="flex-1 flex flex-col mb-4">
+                                <label className="text-xs text-gray-400 ml-1 mb-1">Prompt</label>
+                                <textarea
+                                    value={videoPrompt}
+                                    onChange={(e) => setVideoPrompt(e.target.value)}
+                                    placeholder="Describe the video action and style..."
+                                    className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-neon-pink/50 resize-none min-h-[100px]"
+                                />
+                            </div>
+
+                            <button className="glass-button px-6 py-3 rounded-xl w-full font-semibold text-neon-pink shadow-[0_0_15px_rgba(255,0,255,0.3)] hover:shadow-[0_0_25px_rgba(255,0,255,0.5)] transition-all">
+                                <span className="flex items-center justify-center gap-2">
+                                    <Film size={18} />
+                                    Generate Video
+                                </span>
                             </button>
                         </div>
                     )}
