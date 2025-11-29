@@ -17,8 +17,11 @@ async def main():
         logger.error("BOT_TOKEN is not set!")
         return
 
-    bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
+    bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
+
+    from bot.handlers.admin import router as admin_router
+    dp.include_router(admin_router)
 
     from bot.handlers.common import router as common_router
     dp.include_router(common_router)

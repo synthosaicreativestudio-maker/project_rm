@@ -4,6 +4,7 @@ from typing import Optional
 class Settings(BaseSettings):
     BOT_TOKEN: str
     GEMINI_API_KEY: Optional[str] = None
+    ADMIN_IDS: list[int] = []
     
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
