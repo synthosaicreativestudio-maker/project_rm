@@ -99,13 +99,16 @@ function App() {
                 body: JSON.stringify({ message: userMessage.content })
             })
 
-            if (!response.ok) throw new Error('Failed to fetch')
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                throw new Error(errorData.response || `Server error: ${response.status}`)
+            }
 
             const data = await response.json()
             setMessages(prev => [...prev, { role: 'assistant', content: data.response }])
-        } catch (error) {
+        } catch (error: any) {
             console.error(error)
-            setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, something went wrong." }])
+            setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ Error: ${error.message}` }])
         } finally {
             setIsLoading(false)
         }

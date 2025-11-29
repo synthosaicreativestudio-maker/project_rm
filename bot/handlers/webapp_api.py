@@ -27,27 +27,35 @@ logger = logging.getLogger(__name__)
 # I will modify `bot/main.py` to run `aiohttp` server for API endpoints.
 
 async def handle_chat(request):
-    data = await request.json()
-    user_message = data.get('message', '')
-    # In a real app, we'd verify initData here
-    
-    response_text = await gemini_service.generate_text(user_message)
-    return web.json_response({'response': response_text})
+    try:
+        data = await request.json()
+        user_message = data.get('message', '')
+        # In a real app, we'd verify initData here
+        
+        response_text = await gemini_service.generate_text(user_message)
+        return web.json_response({'response': response_text})
+    except Exception as e:
+        logger.error(f"Error in handle_chat: {e}")
+        return web.json_response({'response': f"Error: {str(e)}"}, status=500)
 
 async def handle_enhance_prompt(request):
-    data = await request.json()
-    prompt = data.get('prompt', '')
-    media_type = data.get('type', 'image') # 'image' or 'video'
-    
-    enhancement_instruction = f"""
-    Act as a professional {media_type} prompt engineer. 
-    Enhance the following user prompt to be more cinematic, detailed, and artistic.
-    Keep it concise but descriptive.
-    User Prompt: "{prompt}"
-    """
-    
-    enhanced_prompt = await gemini_service.generate_text(enhancement_instruction)
-    return web.json_response({'enhanced_prompt': enhanced_prompt})
+    try:
+        data = await request.json()
+        prompt = data.get('prompt', '')
+        media_type = data.get('type', 'image') # 'image' or 'video'
+        
+        enhancement_instruction = f"""
+        Act as a professional {media_type} prompt engineer. 
+        Enhance the following user prompt to be more cinematic, detailed, and artistic.
+        Keep it concise but descriptive.
+        User Prompt: "{prompt}"
+        """
+        
+        enhanced_prompt = await gemini_service.generate_text(enhancement_instruction)
+        return web.json_response({'enhanced_prompt': enhanced_prompt})
+    except Exception as e:
+        logger.error(f"Error in handle_enhance_prompt: {e}")
+        return web.json_response({'enhanced_prompt': f"Error: {str(e)}"}, status=500)
 
 async def handle_generate_image(request):
     # Mock generation
