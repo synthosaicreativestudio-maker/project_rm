@@ -1,9 +1,7 @@
-from aiogram import Router, types, F
-from aiogram.types import Message
-from aiogram.utils.markdown import hbold
-from services.gemini import gemini_service
 import logging
-import json
+from aiohttp import web
+from aiogram import Router
+from services.gemini import gemini_service
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -27,8 +25,6 @@ logger = logging.getLogger(__name__)
 # We MUST run an HTTP server.
 #
 # I will modify `bot/main.py` to run `aiohttp` server for API endpoints.
-
-from aiohttp import web
 
 async def handle_chat(request):
     data = await request.json()
