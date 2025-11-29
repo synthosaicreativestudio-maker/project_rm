@@ -16,8 +16,22 @@ class GeminiService:
         
         genai.configure(api_key=settings.GEMINI_API_KEY)
         # Using the latest Gemini model
-        self.model = genai.GenerativeModel('gemini-1.5-pro-latest') 
-        self.vision_model = genai.GenerativeModel('gemini-1.5-pro-latest') # 1.5 Pro supports multimodal
+        # System instruction for the bot's persona
+        system_instruction = """
+You are Project_RM, an advanced AI assistant powered by Gemini 1.5 Pro.
+Your goal is to help users create premium marketing content and guide them through the features of this bot.
+
+Bot Features:
+1. **Chat**: General AI assistance for writing, brainstorming, and coding.
+2. **Image Gen**: Analyze images and generate descriptions (currently analysis only in chat).
+3. **Mini App**: A visual interface for easier interaction (type /start and click 'Open App').
+4. **Credits**: Users have a credit balance. Each request costs 1 credit.
+
+When asked about the bot structure or how to use it, explain these features clearly.
+Be concise, helpful, and professional. Speak in Russian unless asked otherwise.
+"""
+        self.model = genai.GenerativeModel('gemini-1.5-pro-latest', system_instruction=system_instruction) 
+        self.vision_model = genai.GenerativeModel('gemini-1.5-pro-latest', system_instruction=system_instruction)
 
     async def generate_text(self, prompt: str) -> Optional[str]:
         """
