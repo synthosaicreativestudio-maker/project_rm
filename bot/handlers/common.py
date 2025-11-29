@@ -2,9 +2,11 @@ from aiogram import Router, types
 from aiogram.filters import CommandStart
 from aiogram.enums import ParseMode
 from aiogram.utils.markdown import hbold
+from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy import select
 from database.db import get_db
 from database.models import User, Transaction
+from config.settings import settings
 
 router = Router()
 
@@ -17,6 +19,13 @@ async def command_start_handler(message: types.Message) -> None:
     username = message.from_user.username
     full_name = message.from_user.full_name
 
+    # Use configured WEBAPP_URL or a placeholder if not set
+    webapp_url = settings.WEBAPP_URL or "https://google.com" 
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🚀 Open App", web_app=WebAppInfo(url=webapp_url))]
+    ])
+
     async for session in get_db():
         result = await session.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
@@ -28,9 +37,15 @@ async def command_start_handler(message: types.Message) -> None:
             transaction = Transaction(user_id=user_id, amount=10, description="Welcome Bonus")
             session.add(transaction)
             await session.commit()
-            await message.answer(f"Hello, {hbold(full_name)}! \nWelcome to Project_RM (Gemini 3 Edition).\nYou have received 10 free credits!")
+            await message.answer(
+                f"Hello, {hbold(full_name)}! \nWelcome to Project_RM (Gemini 3 Edition).\nYou have received 10 free credits!",
+                reply_markup=kb
+            )
         else:
-            await message.answer(f"Welcome back, {hbold(full_name)}! \nBalance: {user.balance} credits.")
+            await message.answer(
+                f"Welcome back, {hbold(full_name)}! \nBalance: {user.balance} credits.",
+                reply_markup=kb
+            )
 
 @router.message(lambda message: message.text and not message.text.startswith('/'))
 async def chat_handler(message: types.Message) -> None:
