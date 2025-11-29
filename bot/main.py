@@ -32,13 +32,26 @@ async def main():
     try:
         await bot.delete_webhook(drop_pending_updates=True)
         
-        # Set Menu Button
+    # Set Menu Button
         from aiogram.types import MenuButtonWebApp, WebAppInfo
         webapp_url = settings.WEBAPP_URL or "https://google.com"
         await bot.set_chat_menu_button(
             menu_button=MenuButtonWebApp(text="Open App", web_app=WebAppInfo(url=webapp_url))
         )
         
+        # Start API Server
+        from aiohttp import web
+        from bot.handlers.webapp_api import setup_web_routes
+        
+        app = web.Application()
+        setup_web_routes(app)
+        
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, 'localhost', 8000)
+        await site.start()
+        logger.info("API Server started on http://localhost:8000")
+
         await dp.start_polling(bot)
     except Exception as e:
         logger.error(f"Error starting bot: {e}")
