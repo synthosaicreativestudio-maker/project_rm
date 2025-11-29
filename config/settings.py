@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     
     WEBAPP_URL: Optional[str] = None
 
+    # Model IDs (Strictly from TZ)
+    MODELS: dict = {
+        "text": "gemini-3.0-pro",
+        "video": "veo-3.1-preview",
+        "image": "nanabanana-pro"
+    }
+
     @property
     def database_url(self) -> str:
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

@@ -4,9 +4,8 @@ import { Bot, Image as ImageIcon, Video, Sparkles, Upload, X, Smartphone, Monito
 
 function App() {
     const [activeTab, setActiveTab] = useState('chat')
-    const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([])
     const [input, setInput] = useState('')
-    const [isLoading, setIsLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(false) // Kept for button loading state if needed, though sendData is instant.
 
     // Image Gen State
     const [imagePrompt, setImagePrompt] = useState('')
@@ -57,61 +56,44 @@ function App() {
         }
     }
 
-    const handleGenerate = async (type: 'image' | 'video') => {
-        setIsLoading(true)
-        try {
-            const endpoint = type === 'image' ? 'generate-image' : 'generate-video'
-            await fetch(`http://localhost:8000/api/${endpoint}/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    prompt: type === 'image' ? imagePrompt : videoPrompt,
-                    settings: type === 'image' ? { aspectRatio, resolution } : { orientation: videoOrientation }
-                })
-            })
-            // In a real app, we'd handle the result here
-            alert(`${type === 'image' ? 'Image' : 'Video'} generation started!`)
-        } catch (error) {
-            console.error(error)
-        } finally {
-            setIsLoading(false)
+    const handleGenerate = (type: 'image' | 'video') => {
+        const tg = (window as any).Telegram?.WebApp
+        if (!tg) {
+            alert("Telegram WebApp not found")
+            return
         }
+
+        const prompt = type === 'image' ? imagePrompt : videoPrompt
+        if (!prompt.trim()) {
+            tg.showAlert("Please enter a prompt")
+            return
+        }
+
+        const data = {
+            type: type,
+            prompt: prompt,
+            params: type === 'image' ? { aspectRatio, resolution } : { orientation: videoOrientation }
+        }
+
+        tg.sendData(JSON.stringify(data))
     }
 
-    const sendMessage = async () => {
-        if (!input.trim()) return
+    const sendTextMessage = () => {
+        const tg = (window as any).Telegram?.WebApp
+        if (!tg) return
 
-        const userMessage = { role: 'user' as const, content: input }
-        setMessages(prev => [...prev, userMessage])
-        setInput('')
-        setIsLoading(true)
-
-        try {
-            // Get Telegram initData
-            const initData = (window as any).Telegram?.WebApp?.initData || ""
-
-            const response = await fetch('http://localhost:8000/api/chat/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${initData}`
-                },
-                body: JSON.stringify({ message: userMessage.content })
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.response || `Server error: ${response.status}`)
-            }
-
-            const data = await response.json()
-            setMessages(prev => [...prev, { role: 'assistant', content: data.response }])
-        } catch (error: any) {
-            console.error(error)
-            setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ Error: ${error.message}` }])
-        } finally {
-            setIsLoading(false)
+        if (!input.trim()) {
+            tg.showAlert("Please enter a message")
+            return
         }
+
+        const data = {
+            type: 'text',
+            prompt: input,
+            params: {}
+        }
+
+        tg.sendData(JSON.stringify(data))
     }
 
     return (
@@ -147,57 +129,30 @@ function App() {
                     className="glass-panel rounded-3xl p-4 flex-1 flex flex-col overflow-hidden relative"
                 >
                     {activeTab === 'chat' && (
-                        <div className="flex flex-col h-full">
-                            {messages.length === 0 ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-                                    <Bot size={64} className="text-neon-blue mb-4 drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]" />
-                                    <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-blue to-neon-purple">
-                                        AI Assistant
-                                    </h2>
-                                    <p className="text-gray-400 text-sm">
-                                        Ask me anything or upload a document for analysis.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-hide">
-                                    {messages.map((msg, idx) => (
-                                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                            <div className={`max-w-[80%] p-3 rounded-2xl ${msg.role === 'user'
-                                                ? 'bg-neon-blue/20 text-white rounded-tr-none border border-neon-blue/30'
-                                                : 'bg-white/10 text-gray-200 rounded-tl-none border border-white/10'
-                                                }`}>
-                                                {msg.content}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {isLoading && (
-                                        <div className="flex justify-start">
-                                            <div className="bg-white/10 p-3 rounded-2xl rounded-tl-none flex gap-1">
-                                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
-                                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                        <div className="flex flex-col h-full justify-center items-center p-4">
+                            <Bot size={64} className="text-neon-blue mb-6 drop-shadow-[0_0_15px_rgba(0,243,255,0.5)]" />
+                            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-blue to-neon-purple mb-2">
+                                Chat Mode
+                            </h2>
+                            <p className="text-gray-400 text-center mb-8">
+                                Ask Gemini 3.0 Pro anything. The bot will reply in the chat.
+                            </p>
 
-                            {/* Input Area */}
-                            <div className="mt-auto pt-4 border-t border-white/10 flex gap-2">
-                                <input
-                                    type="text"
+                            <div className="w-full space-y-4">
+                                <textarea
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                                    placeholder="Type a message..."
-                                    className="flex-1 glass-input rounded-xl px-4 py-2 text-sm"
+                                    placeholder="Type your prompt here..."
+                                    className="w-full glass-input rounded-xl px-4 py-3 text-sm resize-none min-h-[120px]"
                                 />
                                 <button
-                                    onClick={sendMessage}
-                                    disabled={isLoading}
-                                    className="p-2 bg-neon-blue/20 rounded-xl text-neon-blue hover:bg-neon-blue/30 disabled:opacity-50 transition-colors"
+                                    onClick={sendTextMessage}
+                                    className="glass-button px-6 py-3 rounded-xl w-full font-semibold text-neon-blue shadow-[0_0_15px_rgba(0,243,255,0.3)] hover:shadow-[0_0_25px_rgba(0,243,255,0.5)] transition-all"
                                 >
-                                    <Sparkles size={20} />
+                                    <span className="flex items-center justify-center gap-2">
+                                        <Sparkles size={18} />
+                                        Send to Bot
+                                    </span>
                                 </button>
                             </div>
                         </div>
