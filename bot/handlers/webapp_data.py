@@ -55,7 +55,11 @@ async def handle_web_app_data(message: types.Message):
             try:
                 if response.parts:
                     img_data = response.parts[0].inline_data.data
-                    await message.answer_photo(photo=img_data, caption=f"Модель: {model_id}")
+                    # Fix: Wrap bytes in BufferedInputFile for aiogram 3.x
+                    from aiogram.types import BufferedInputFile
+                    photo_file = BufferedInputFile(img_data, filename="generated_image.jpg")
+                    
+                    await message.answer_photo(photo=photo_file, caption=f"Модель: {model_id}")
                 else:
                     await message.answer(f"Результат (без частей): {response.text}", parse_mode=None)
             except Exception as e:
