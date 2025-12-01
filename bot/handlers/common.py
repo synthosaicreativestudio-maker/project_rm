@@ -52,7 +52,7 @@ async def command_start_handler(message: types.Message) -> None:
             )
         else:
             await message.answer(
-                f"Welcome back, {hbold(full_name)}! \nBalance: {user.balance} credits.",
+                f"С возвращением, {hbold(full_name)}! 👋\nБаланс: {user.balance} кредитов (MVP: Безлимит).",
                 reply_markup=kb
             )
 
@@ -69,20 +69,21 @@ async def chat_handler(message: types.Message) -> None:
         result = await session.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
         
-        if not user or user.balance <= 0:
-            await message.answer("Insufficient funds. Please top up your balance.")
-            return
+        # MVP: Credits disabled
+        # if not user or user.balance <= 0:
+        #     await message.answer("Insufficient funds. Please top up your balance.")
+        #     return
 
-        wait_message = await message.answer("Thinking...")
+        wait_message = await message.answer("Думаю...")
         
         try:
             response = await gemini_service.generate_text(message.text)
             if response:
-                # Deduct credit
-                user.balance -= 1
-                transaction = Transaction(user_id=user_id, amount=-1, description="Text Generation")
-                session.add(transaction)
-                await session.commit()
+                # Deduct credit (Disabled for MVP)
+                # user.balance -= 1
+                # transaction = Transaction(user_id=user_id, amount=-1, description="Text Generation")
+                # session.add(transaction)
+                # await session.commit()
                 
                 try:
                     await wait_message.edit_text(response, parse_mode=ParseMode.MARKDOWN)
@@ -90,9 +91,9 @@ async def chat_handler(message: types.Message) -> None:
                     # Fallback if Markdown parsing fails
                     await wait_message.edit_text(response, parse_mode=None)
             else:
-                await wait_message.edit_text("Sorry, I couldn't generate a response.")
+                await wait_message.edit_text("Извините, не удалось сгенерировать ответ.")
         except Exception as e:
-            await wait_message.edit_text(f"An error occurred: {str(e)}", parse_mode=None)
+            await wait_message.edit_text(f"Произошла ошибка: {str(e)}", parse_mode=None)
 
 @router.message(lambda message: message.photo)
 async def photo_handler(message: types.Message) -> None:
@@ -103,7 +104,7 @@ async def photo_handler(message: types.Message) -> None:
     from PIL import Image
 
     if not message.caption:
-        await message.answer("Please provide a caption for the image.")
+        await message.answer("Пожалуйста, добавьте описание к фото.")
         return
 
     user_id = message.from_user.id
@@ -112,9 +113,10 @@ async def photo_handler(message: types.Message) -> None:
         result = await session.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
         
-        if not user or user.balance <= 0:
-            await message.answer("Insufficient funds. Please top up your balance.")
-            return
+        # MVP: Credits disabled
+        # if not user or user.balance <= 0:
+        #     await message.answer("Insufficient funds. Please top up your balance.")
+        #     return
 
         wait_message = await message.answer("Analyzing image...")
 
