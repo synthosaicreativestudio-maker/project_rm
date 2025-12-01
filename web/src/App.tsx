@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Bot, Image as ImageIcon, Video, Sparkles, Upload, X, Smartphone, Monitor, Film } from 'lucide-react'
+import { Bot, Image as ImageIcon, Video, Sparkles, Upload, X, Smartphone, Monitor, Film, User, MessageSquare } from 'lucide-react'
 
 function App() {
     const [activeTab, setActiveTab] = useState('chat')
     const [input, setInput] = useState('')
-    const [isLoading, setIsLoading] = useState(false) // Kept for button loading state if needed, though sendData is instant.
+    const [isLoading, setIsLoading] = useState(false)
 
     // Image Gen State
     const [subject, setSubject] = useState('')
+    const [style, setStyle] = useState('Реализм')
     const [material, setMaterial] = useState('')
     const [lens, setLens] = useState('Portrait (85–135mm)')
     const [aperture, setAperture] = useState('f/1.8 (Bokeh)')
@@ -18,22 +19,11 @@ function App() {
 
     const [aspectRatio, setAspectRatio] = useState('1:1')
     const [resolution, setResolution] = useState('1K')
-    const [imageRefs, setImageRefs] = useState<File[]>([])
 
     // Video Gen State
     const [videoPrompt, setVideoPrompt] = useState('')
     const [videoOrientation, setVideoOrientation] = useState('9:16')
     const [videoRef, setVideoRef] = useState<File | null>(null)
-
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            setImageRefs(prev => [...prev, ...Array.from(e.target.files!)])
-        }
-    }
-
-    const removeImageRef = (index: number) => {
-        setImageRefs(prev => prev.filter((_, i) => i !== index))
-    }
 
     const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -41,9 +31,7 @@ function App() {
         }
     }
 
-
     const enhancePrompt = async (type: 'image' | 'video') => {
-        // For image, we might want to enhance the 'subject' or just disable enhance for now
         const currentPrompt = type === 'image' ? subject : videoPrompt
         if (!currentPrompt.trim()) return
 
@@ -56,8 +44,7 @@ function App() {
             })
             const data = await response.json()
             if (type === 'image') {
-                // Enhance logic for structured form is complex, skipping for now or user can request later
-                // setImagePrompt(data.enhanced_prompt) 
+                // Logic for image prompt enhancement if needed
             }
             else setVideoPrompt(data.enhanced_prompt)
         } catch (error) {
@@ -77,15 +64,14 @@ function App() {
         let prompt = ''
         if (type === 'image') {
             if (!subject.trim()) {
-                tg.showAlert("Please describe the subject")
+                tg.showAlert("Пожалуйста, опишите объект (Subject)")
                 return
             }
-            // Assemble structured prompt
-            prompt = `Subject: ${subject}. Material: ${material}. Camera: ${lens}, ${aperture}, ${angle}. Lighting: ${lighting}. Background: ${background}.`
+            prompt = `Subject: ${subject}. Style: ${style}. Material: ${material}. Camera: ${lens}, ${aperture}, ${angle}. Lighting: ${lighting}. Background: ${background}.`
         } else {
             prompt = videoPrompt
             if (!prompt.trim()) {
-                tg.showAlert("Please enter a prompt")
+                tg.showAlert("Пожалуйста, введите промт")
                 return
             }
         }
@@ -96,7 +82,7 @@ function App() {
             params: type === 'image' ? { aspectRatio, resolution } : { orientation: videoOrientation }
         }
 
-        tg.showAlert(`Sending ${type} request...`) // Debug alert
+        tg.showAlert(`Отправляю запрос: ${type === 'image' ? 'Фото' : 'Видео'}...`)
         tg.sendData(JSON.stringify(data))
     }
 
@@ -105,7 +91,7 @@ function App() {
         if (!tg) return
 
         if (!input.trim()) {
-            tg.showAlert("Please enter a message")
+            tg.showAlert("Пожалуйста, введите сообщение")
             return
         }
 
@@ -115,13 +101,12 @@ function App() {
             params: {}
         }
 
-        tg.showAlert("Sending text request...") // Debug alert
+        tg.showAlert("Отправляю текстовый запрос...")
         tg.sendData(JSON.stringify(data))
     }
 
     return (
         <div className="min-h-screen p-4 flex flex-col items-center justify-center text-white font-sans">
-
             {/* Header */}
             <motion.header
                 initial={{ opacity: 0, y: -20 }}
@@ -134,11 +119,11 @@ function App() {
                     </div>
                     <div>
                         <h1 className="font-bold text-lg leading-tight">Project_RM</h1>
-                        <p className="text-xs text-gray-400">Gemini 3 Powered</p>
+                        <p className="text-xs text-gray-400">На базе Gemini 3</p>
                     </div>
                 </div>
                 <div className="px-3 py-1 rounded-full bg-cyan-500/10 text-xs font-mono text-cyan-400 border border-cyan-500/20 shadow-[0_0_10px_rgba(34,211,238,0.2)]">
-                    BETA
+                    БЕТА
                 </div>
             </motion.header>
 
@@ -155,17 +140,17 @@ function App() {
                         <div className="flex flex-col h-full justify-center items-center p-4">
                             <Bot size={64} className="text-neon-blue mb-6 drop-shadow-[0_0_15px_rgba(0,243,255,0.5)]" />
                             <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-blue to-neon-purple mb-2">
-                                Chat Mode
+                                Чат
                             </h2>
                             <p className="text-gray-400 text-center mb-8">
-                                Ask Gemini 3.0 Pro anything. The bot will reply in the chat.
+                                Спросите Gemini 3.0 Pro о чем угодно. Бот ответит в чате.
                             </p>
 
                             <div className="w-full space-y-4">
                                 <textarea
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    placeholder="Type your prompt here..."
+                                    placeholder="Введите ваш запрос..."
                                     className="w-full glass-input rounded-xl px-4 py-3 text-sm resize-none min-h-[120px]"
                                 />
                                 <button
@@ -174,7 +159,7 @@ function App() {
                                 >
                                     <span className="flex items-center justify-center gap-2">
                                         <Sparkles size={18} />
-                                        Send to Bot
+                                        Отправить боту
                                     </span>
                                 </button>
                             </div>
@@ -182,87 +167,54 @@ function App() {
                     )}
 
                     {activeTab === 'image' && (
-                        <div className="flex flex-col h-full overflow-y-auto scrollbar-hide p-2">
-                            <div className="flex items-center justify-center mb-6">
-                                <ImageIcon size={48} className="text-neon-purple mr-3 drop-shadow-[0_0_10px_rgba(188,19,254,0.5)]" />
-                                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-purple to-neon-pink">
-                                    Image Gen
-                                </h2>
-                            </div>
-
-                            {/* Settings */}
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="space-y-1">
-                                    <label className="text-xs text-gray-400 ml-1">Aspect Ratio</label>
-                                    <select
-                                        value={aspectRatio}
-                                        onChange={(e) => setAspectRatio(e.target.value)}
-                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
-                                    >
-                                        <option value="1:1">1:1 (Square)</option>
-                                        <option value="16:9">16:9 (Landscape)</option>
-                                        <option value="9:16">9:16 (Portrait)</option>
-                                        <option value="4:3">4:3 (Classic)</option>
-                                        <option value="3:2">3:2 (Photo)</option>
-                                    </select>
+                        <div className="flex flex-col h-full p-4 overflow-y-auto">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-3 rounded-xl bg-neon-purple/10 text-neon-purple">
+                                    <ImageIcon size={24} />
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs text-gray-400 ml-1">Resolution</label>
-                                    <select
-                                        value={resolution}
-                                        onChange={(e) => setResolution(e.target.value)}
-                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
-                                    >
-                                        <option value="1K">1K (Standard)</option>
-                                        <option value="2K">2K (High)</option>
-                                        <option value="4K">4K (Ultra)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* Reference Images */}
-                            <div className="mb-4">
-                                <label className="text-xs text-gray-400 ml-1 mb-1 block">Reference Images (Optional)</label>
-                                <div className="flex flex-wrap gap-2 mb-2">
-                                    {imageRefs.map((file, idx) => (
-                                        <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-white/20 group">
-                                            <img src={URL.createObjectURL(file)} alt="ref" className="w-full h-full object-cover" />
-                                            <button
-                                                onClick={() => removeImageRef(idx)}
-                                                className="absolute top-0 right-0 bg-black/50 text-white p-0.5 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <X size={12} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    <label className="w-16 h-16 rounded-lg border border-dashed border-white/30 flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors">
-                                        <Upload size={20} className="text-gray-400" />
-                                        <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
-                                    </label>
-                                </div>
+                                <h2 className="text-2xl font-bold">Генерация Изображений</h2>
                             </div>
 
                             <div className="flex-1 flex flex-col mb-4 space-y-3">
                                 {/* Subject */}
                                 <div>
-                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Subject (Who/What?)</label>
+                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Объект (Кто/Что?)</label>
                                     <input
                                         type="text"
                                         value={subject}
                                         onChange={(e) => setSubject(e.target.value)}
-                                        placeholder="e.g. Golden Retriever with wet fur"
+                                        placeholder="Например: Золотистый ретривер"
                                         className="w-full glass-input rounded-xl px-4 py-2 text-sm"
                                     />
                                 </div>
 
+                                {/* Style */}
+                                <div>
+                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Стиль</label>
+                                    <select
+                                        value={style}
+                                        onChange={(e) => setStyle(e.target.value)}
+                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                    >
+                                        <option value="Реализм">Реализм</option>
+                                        <option value="Мультфильм">Мультфильм</option>
+                                        <option value="3D Рендер">3D Рендер</option>
+                                        <option value="Pixar">Pixar</option>
+                                        <option value="Акварель">Акварель</option>
+                                        <option value="Киберпанк">Киберпанк</option>
+                                        <option value="Аниме">Аниме</option>
+                                        <option value="Масло">Масло</option>
+                                    </select>
+                                </div>
+
                                 {/* Material */}
                                 <div>
-                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Material/Texture</label>
+                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Материал/Фактура</label>
                                     <input
                                         type="text"
                                         value={material}
                                         onChange={(e) => setMaterial(e.target.value)}
-                                        placeholder="e.g. Matte, Glossy Plastic, Silk"
+                                        placeholder="Например: Матовый, Шелк"
                                         className="w-full glass-input rounded-xl px-4 py-2 text-sm"
                                     />
                                 </div>
@@ -270,227 +222,237 @@ function App() {
                                 {/* Camera Settings Grid */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Lens</label>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Объектив</label>
                                         <select
                                             value={lens}
                                             onChange={(e) => setLens(e.target.value)}
                                             className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
                                         >
-                                            <option value="Wide Angle (16–24mm)">Wide Angle (16–24mm)</option>
-                                            <option value="Portrait (85–135mm)">Portrait (85–135mm)</option>
-                                            <option value="Macro">Macro</option>
+                                            <option value="Wide Angle (16–24mm)">Широкий угол</option>
+                                            <option value="Portrait (85–135mm)">Портрет</option>
+                                            <option value="Macro">Макро</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Aperture</label>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Диафрагма</label>
                                         <select
                                             value={aperture}
                                             onChange={(e) => setAperture(e.target.value)}
                                             className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
                                         >
-                                            <option value="f/1.8 (Bokeh)">f/1.8 (Bokeh)</option>
-                                            <option value="f/16 (Deep Focus)">f/16 (Deep Focus)</option>
+                                            <option value="f/1.8 (Bokeh)">f/1.8 (Боке)</option>
+                                            <option value="f/16 (Deep Focus)">f/16 (Резкость)</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Angle</label>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Ракурс</label>
                                         <select
                                             value={angle}
                                             onChange={(e) => setAngle(e.target.value)}
                                             className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
                                         >
-                                            <option value="Low Angle">Low Angle</option>
-                                            <option value="High Angle">High Angle</option>
-                                            <option value="Dutch Angle">Dutch Angle</option>
-                                            <option value="Eye Level">Eye Level</option>
+                                            <option value="Low Angle">Снизу</option>
+                                            <option value="High Angle">Сверху</option>
+                                            <option value="Dutch Angle">Наклон</option>
+                                            <option value="Eye Level">На уровне глаз</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Lighting</label>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Освещение</label>
                                         <select
                                             value={lighting}
                                             onChange={(e) => setLighting(e.target.value)}
                                             className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
                                         >
-                                            <option value="Cinematic Lighting">Cinematic</option>
-                                            <option value="Rim Lighting">Rim Lighting</option>
-                                            <option value="Volumetric Lighting">Volumetric</option>
-                                            <option value="Golden Hour">Golden Hour</option>
-                                            <option value="Blue Hour">Blue Hour</option>
-                                            <option value="Studio Lighting">Studio</option>
+                                            <option value="Cinematic Lighting">Киношное</option>
+                                            <option value="Rim Lighting">Контровое</option>
+                                            <option value="Volumetric Lighting">Объемное</option>
+                                            <option value="Golden Hour">Золотой час</option>
+                                            <option value="Blue Hour">Синий час</option>
+                                            <option value="Studio Lighting">Студийное</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 {/* Background */}
                                 <div>
-                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Background</label>
+                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Фон</label>
                                     <input
                                         type="text"
                                         value={background}
                                         onChange={(e) => setBackground(e.target.value)}
-                                        placeholder="e.g. Old library, Solid color"
+                                        placeholder="Например: Старая библиотека"
                                         className="w-full glass-input rounded-xl px-4 py-2 text-sm"
                                     />
                                 </div>
                             </div>
 
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div>
+                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Соотношение</label>
+                                    <select
+                                        value={aspectRatio}
+                                        onChange={(e) => setAspectRatio(e.target.value)}
+                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                    >
+                                        <option value="1:1">1:1 (Квадрат)</option>
+                                        <option value="16:9">16:9 (Пейзаж)</option>
+                                        <option value="9:16">9:16 (Сторис)</option>
+                                        <option value="4:3">4:3 (Фото)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Разрешение</label>
+                                    <select
+                                        value={resolution}
+                                        onChange={(e) => setResolution(e.target.value)}
+                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                    >
+                                        <option value="1K">1K (Стандарт)</option>
+                                        <option value="2K">2K (HD)</option>
+                                        <option value="4K">4K (Ultra)</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <button
                                 onClick={() => handleGenerate('image')}
-                                disabled={isLoading}
-                                className="glass-button px-6 py-3 rounded-xl w-full font-semibold text-neon-purple shadow-[0_0_15px_rgba(188,19,254,0.3)] hover:shadow-[0_0_25px_rgba(188,19,254,0.5)] transition-all disabled:opacity-50"
+                                className="glass-button w-full py-4 rounded-xl font-bold text-lg text-neon-purple shadow-[0_0_20px_rgba(188,19,254,0.3)] hover:shadow-[0_0_30px_rgba(188,19,254,0.5)] transition-all mt-auto"
                             >
                                 <span className="flex items-center justify-center gap-2">
-                                    {isLoading ? <span className="animate-spin">⏳</span> : <Sparkles size={18} />}
-                                    Generate Artwork
+                                    <Sparkles size={20} />
+                                    Сгенерировать
                                 </span>
                             </button>
                         </div>
                     )}
 
                     {activeTab === 'video' && (
-                        <div className="flex flex-col h-full overflow-y-auto scrollbar-hide p-2">
-                            <div className="flex items-center justify-center mb-6">
-                                <Video size={48} className="text-neon-pink mr-3 drop-shadow-[0_0_10px_rgba(255,0,255,0.5)]" />
-                                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neon-pink to-orange-500">
-                                    Video Studio
-                                </h2>
-                            </div>
-
-                            {/* Orientation */}
-                            <div className="mb-4">
-                                <label className="text-xs text-gray-400 ml-1 mb-1 block">Orientation</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button
-                                        onClick={() => setVideoOrientation('9:16')}
-                                        className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${videoOrientation === '9:16'
-                                            ? 'bg-neon-pink/20 border-neon-pink text-white'
-                                            : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
-                                            }`}
-                                    >
-                                        <Smartphone size={18} />
-                                        <span className="text-sm">Vertical</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setVideoOrientation('16:9')}
-                                        className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${videoOrientation === '16:9'
-                                            ? 'bg-neon-pink/20 border-neon-pink text-white'
-                                            : 'bg-black/30 border-white/10 text-gray-400 hover:bg-white/5'
-                                            }`}
-                                    >
-                                        <Monitor size={18} />
-                                        <span className="text-sm">Horizontal</span>
-                                    </button>
+                        <div className="flex flex-col h-full p-4 overflow-y-auto">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-3 rounded-xl bg-neon-blue/10 text-neon-blue">
+                                    <Video size={24} />
                                 </div>
+                                <h2 className="text-2xl font-bold">Видео Студия</h2>
                             </div>
 
-                            {/* Reference Image */}
-                            <div className="mb-4">
-                                <label className="text-xs text-gray-400 ml-1 mb-1 block">Reference Image (Optional)</label>
-                                {videoRef ? (
-                                    <div className="relative w-full h-32 rounded-xl overflow-hidden border border-white/20 group">
-                                        <img src={URL.createObjectURL(videoRef)} alt="ref" className="w-full h-full object-cover" />
+                            <div className="flex-1 flex flex-col mb-4">
+                                <label className="text-xs text-gray-400 ml-1 mb-1">Ориентация</label>
+                                <div className="flex bg-black/30 p-1 rounded-xl mb-6 border border-white/10">
+                                    {(['landscape', 'portrait', 'square'] as const).map((o) => (
                                         <button
-                                            onClick={() => setVideoRef(null)}
-                                            className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                            key={o}
+                                            onClick={() => setVideoOrientation(o)}
+                                            className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${videoOrientation === o ? 'bg-neon-blue/20 text-neon-blue shadow-[0_0_10px_rgba(0,243,255,0.2)]' : 'text-gray-400 hover:text-white'
+                                                }`}
                                         >
-                                            <X size={16} />
+                                            {o.charAt(0).toUpperCase() + o.slice(1)}
                                         </button>
-                                    </div>
-                                ) : (
-                                    <label className="w-full h-24 rounded-xl border border-dashed border-white/30 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors">
-                                        <Upload size={24} className="text-gray-400 mb-2" />
-                                        <span className="text-xs text-gray-400">Upload Reference Image</span>
-                                        <input type="file" accept="image/*" onChange={handleVideoUpload} className="hidden" />
-                                    </label>
-                                )}
-                            </div>
+                                    ))}
+                                </div>
 
-                            <div className="flex-1 flex flex-col mb-4 relative">
-                                <label className="text-xs text-gray-400 ml-1 mb-1">Prompt</label>
-                                <div className="relative">
+                                <label className="text-xs text-gray-400 ml-1 mb-1">Промт</label>
+                                <div className="relative mb-4">
                                     <textarea
                                         value={videoPrompt}
                                         onChange={(e) => setVideoPrompt(e.target.value)}
-                                        placeholder="Describe the video action and style..."
+                                        placeholder="Опишите видео сцену..."
                                         className="w-full glass-input rounded-xl px-4 py-3 text-sm resize-none min-h-[100px] pr-10"
                                     />
                                     <button
                                         onClick={() => enhancePrompt('video')}
                                         disabled={isLoading || !videoPrompt}
-                                        className="absolute bottom-2 right-2 p-2 bg-neon-pink/20 rounded-lg text-neon-pink hover:bg-neon-pink/30 disabled:opacity-50 transition-colors"
-                                        title="Enhance with AI"
+                                        className="absolute bottom-2 right-2 p-2 bg-neon-blue/20 rounded-lg text-neon-blue hover:bg-neon-blue/30 disabled:opacity-50 transition-colors"
+                                        title="Улучшить с AI"
                                     >
                                         <Sparkles size={16} />
                                     </button>
                                 </div>
+
+                                {/* Reference Image for Video */}
+                                <div className="mb-4">
+                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Референс (Фото)</label>
+                                    {videoRef ? (
+                                        <div className="relative w-full h-32 rounded-xl overflow-hidden border border-white/20 group">
+                                            <img src={URL.createObjectURL(videoRef)} alt="ref" className="w-full h-full object-cover" />
+                                            <button
+                                                onClick={() => setVideoRef(null)}
+                                                className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="w-full h-24 rounded-xl border border-dashed border-white/30 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors">
+                                            <Upload size={24} className="text-gray-400 mb-2" />
+                                            <span className="text-xs text-gray-400">Загрузить референс</span>
+                                            <input type="file" accept="image/*" onChange={handleVideoUpload} className="hidden" />
+                                        </label>
+                                    )}
+                                </div>
+
                             </div>
 
                             <button
                                 onClick={() => handleGenerate('video')}
-                                disabled={isLoading}
-                                className="glass-button px-6 py-3 rounded-xl w-full font-semibold text-neon-pink shadow-[0_0_15px_rgba(255,0,255,0.3)] hover:shadow-[0_0_25px_rgba(255,0,255,0.5)] transition-all disabled:opacity-50"
+                                className="glass-button w-full py-4 rounded-xl font-bold text-lg text-neon-blue shadow-[0_0_20px_rgba(0,243,255,0.3)] hover:shadow-[0_0_30px_rgba(0,243,255,0.5)] transition-all mt-auto"
                             >
                                 <span className="flex items-center justify-center gap-2">
-                                    {isLoading ? <span className="animate-spin">⏳</span> : <Film size={18} />}
-                                    Generate Video
+                                    <Sparkles size={20} />
+                                    Сгенерировать Видео
                                 </span>
                             </button>
                         </div>
                     )}
 
                     {activeTab === 'profile' && (
-                        <div className="flex flex-col h-full overflow-y-auto scrollbar-hide">
-                            <h2 className="text-2xl font-bold mb-6 text-center">Choose Your Plan</h2>
-
-                            <div className="space-y-4">
-                                {/* Starter Plan */}
-                                <div className="glass-panel p-4 rounded-2xl border border-white/10 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 bg-gray-700 text-[10px] px-2 py-1 rounded-bl-lg">FREE</div>
-                                    <h3 className="text-lg font-bold text-white">Starter</h3>
-                                    <p className="text-2xl font-bold mt-1">0₽ <span className="text-sm font-normal text-gray-400">/ mo</span></p>
-                                    <ul className="text-sm text-gray-300 mt-3 space-y-1">
-                                        <li className="flex items-center gap-2">✓ 10 Credits (Trial)</li>
-                                        <li className="flex items-center gap-2">✓ Basic Text Gen</li>
-                                        <li className="flex items-center gap-2">✓ Standard Speed</li>
-                                    </ul>
-                                    <button className="w-full mt-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-sm font-semibold">
-                                        Current Plan
-                                    </button>
+                        <div className="flex flex-col h-full p-4 overflow-y-auto">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-3 rounded-xl bg-green-500/10 text-green-400">
+                                    <User size={24} />
                                 </div>
+                                <h2 className="text-2xl font-bold">Профиль</h2>
+                            </div>
 
-                                {/* Pro Plan */}
-                                <div className="glass-panel p-4 rounded-2xl border border-neon-blue/50 relative overflow-hidden shadow-[0_0_20px_rgba(0,243,255,0.1)]">
-                                    <div className="absolute top-0 right-0 bg-neon-blue text-black text-[10px] font-bold px-2 py-1 rounded-bl-lg">POPULAR</div>
-                                    <h3 className="text-lg font-bold text-neon-blue">Pro Creator</h3>
-                                    <p className="text-2xl font-bold mt-1">990₽ <span className="text-sm font-normal text-gray-400">/ mo</span></p>
-                                    <ul className="text-sm text-gray-300 mt-3 space-y-1">
-                                        <li className="flex items-center gap-2">✓ 500 Credits</li>
-                                        <li className="flex items-center gap-2">✓ Gemini Vision (Image)</li>
-                                        <li className="flex items-center gap-2">✓ Priority Support</li>
-                                    </ul>
-                                    <button className="w-full mt-4 py-2 rounded-xl bg-neon-blue text-black hover:bg-neon-blue/90 transition-colors text-sm font-bold shadow-[0_0_10px_rgba(0,243,255,0.3)]">
-                                        Upgrade to Pro
-                                    </button>
+                            <div className="glass-panel p-4 rounded-xl mb-6 bg-gradient-to-br from-white/5 to-transparent">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-gray-400 text-sm">Текущий план</span>
+                                    <span className="text-green-400 font-bold bg-green-500/10 px-3 py-1 rounded-full text-xs border border-green-500/20">FREE</span>
                                 </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-400 text-sm">Кредиты</span>
+                                    <span className="text-xl font-bold">50 / 100</span>
+                                </div>
+                                <div className="w-full bg-white/10 h-1.5 rounded-full mt-3 overflow-hidden">
+                                    <div className="bg-green-400 h-full w-1/2 shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
+                                </div>
+                            </div>
 
-                                {/* Unlimited Plan */}
-                                <div className="glass-panel p-4 rounded-2xl border border-neon-purple/50 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 bg-neon-purple text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">BEST VALUE</div>
-                                    <h3 className="text-lg font-bold text-neon-purple">Unlimited</h3>
-                                    <p className="text-2xl font-bold mt-1">2990₽ <span className="text-sm font-normal text-gray-400">/ mo</span></p>
-                                    <ul className="text-sm text-gray-300 mt-3 space-y-1">
-                                        <li className="flex items-center gap-2">✓ Unlimited Credits</li>
-                                        <li className="flex items-center gap-2">✓ Video Generation</li>
-                                        <li className="flex items-center gap-2">✓ Early Access Features</li>
-                                    </ul>
-                                    <button className="w-full mt-4 py-2 rounded-xl bg-neon-purple text-white hover:bg-neon-purple/90 transition-colors text-sm font-bold shadow-[0_0_10px_rgba(188,19,254,0.3)]">
-                                        Get Unlimited
-                                    </button>
-                                </div>
+                            <h3 className="font-bold mb-4 text-lg">Выберите Тариф</h3>
+                            <div className="space-y-3">
+                                {[
+                                    { name: 'Starter', price: '$9/мес', features: ['1000 Кредитов', 'Стандартная скорость', 'Чат & Фото'] },
+                                    { name: 'Pro', price: '$29/мес', features: ['5000 Кредитов', 'Быстрая генерация', 'Видео доступ'], popular: true },
+                                    { name: 'Unlimited', price: '$99/мес', features: ['Безлимит', 'Приоритет', 'Все модели'] }
+                                ].map((plan) => (
+                                    <div key={plan.name} className={`glass-panel p-4 rounded-xl border transition-all hover:scale-[1.02] cursor-pointer ${plan.popular ? 'border-neon-purple/50 bg-neon-purple/5' : 'border-white/5 hover:border-white/20'}`}>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h4 className="font-bold text-lg">{plan.name}</h4>
+                                            <span className="font-mono text-neon-blue">{plan.price}</span>
+                                        </div>
+                                        <div className="space-y-1">
+                                            {plan.features.map((f, i) => (
+                                                <div key={i} className="flex items-center gap-2 text-xs text-gray-400">
+                                                    <div className="w-1 h-1 rounded-full bg-white/50"></div>
+                                                    {f}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -498,33 +460,26 @@ function App() {
             </main>
 
             {/* Bottom Navigation */}
-            <nav className="fixed bottom-6 left-0 right-0 mx-auto w-[90%] max-w-md glass-panel rounded-2xl p-2 flex justify-around z-50 backdrop-blur-xl bg-black/40 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-                <button
-                    onClick={() => setActiveTab('chat')}
-                    className={`p-3 rounded-xl transition-all ${activeTab === 'chat' ? 'bg-white/10 text-neon-blue shadow-[0_0_10px_rgba(0,243,255,0.3)]' : 'text-gray-400 hover:text-white'}`}
-                >
-                    <Bot size={24} />
-                </button>
-                <button
-                    onClick={() => setActiveTab('image')}
-                    className={`p-3 rounded-xl transition-all ${activeTab === 'image' ? 'bg-white/10 text-neon-purple shadow-[0_0_10px_rgba(188,19,254,0.3)]' : 'text-gray-400 hover:text-white'}`}
-                >
-                    <ImageIcon size={24} />
-                </button>
-                <button
-                    onClick={() => setActiveTab('video')}
-                    className={`p-3 rounded-xl transition-all ${activeTab === 'video' ? 'bg-white/10 text-neon-pink shadow-[0_0_10px_rgba(255,0,255,0.3)]' : 'text-gray-400 hover:text-white'}`}
-                >
-                    <Video size={24} />
-                </button>
-                <button
-                    onClick={() => setActiveTab('profile')}
-                    className={`p-3 rounded-xl transition-all ${activeTab === 'profile' ? 'bg-white/10 text-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.3)]' : 'text-gray-400 hover:text-white'}`}
-                >
-                    <Sparkles size={24} />
-                </button>
+            <nav className="fixed bottom-4 left-4 right-4 max-w-md mx-auto glass-panel p-2 rounded-2xl flex justify-between items-center z-50 shadow-[0_5px_20px_rgba(0,0,0,0.5)]">
+                {[
+                    { id: 'chat', icon: MessageSquare, label: 'Чат' },
+                    { id: 'image', icon: ImageIcon, label: 'Фото' },
+                    { id: 'video', icon: Video, label: 'Видео' },
+                    { id: 'profile', icon: User, label: 'Профиль' }
+                ].map((item) => (
+                    <button
+                        key={item.id}
+                        onClick={() => setActiveTab(item.id as any)}
+                        className={`flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all duration-300 ${activeTab === item.id
+                            ? 'bg-white/10 text-white shadow-[0_0_10px_rgba(255,255,255,0.2)] scale-105'
+                            : 'text-gray-500 hover:text-gray-300'
+                            }`}
+                    >
+                        <item.icon size={20} className={`mb-1 ${activeTab === item.id ? 'drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]' : ''}`} />
+                        <span className="text-[10px] font-medium">{item.label}</span>
+                    </button>
+                ))}
             </nav>
-
         </div>
     )
 }

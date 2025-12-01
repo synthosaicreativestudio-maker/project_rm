@@ -59,10 +59,10 @@ async def handle_web_app_data(message: types.Message):
                 # This is a placeholder based on TZ. Actual response inspection might be needed.
                 try:
                     img_data = response.parts[0].inline_data.data
-                    await message.answer_photo(photo=img_data, caption=f"By {model_id}")
+                    await message.answer_photo(photo=img_data, caption=f"Модель: {model_id}")
                 except AttributeError:
                     # Fallback if structure is different or it returned text
-                    await message.answer(f"Result: {response.text}")
+                    await message.answer(f"Результат: {response.text}")
 
         elif action_type == 'video':
             # Veo 3.1 Preview Logic
@@ -93,9 +93,9 @@ async def handle_web_app_data(message: types.Message):
             if operation.parts:
                 try:
                     video_data = operation.parts[0].inline_data.data
-                    await message.answer_video(video=video_data, caption=f"🎬 {model_id} Result")
+                    await message.answer_video(video=video_data, caption=f"🎬 {model_id}: Готово")
                 except AttributeError:
-                     await message.answer(f"Result: {operation.text}")
+                     await message.answer(f"Результат: {operation.text}")
 
     except Exception as e:
         logger.error(f"Error handling WebApp data: {e}")
