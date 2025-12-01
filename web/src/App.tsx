@@ -209,7 +209,7 @@ function App() {
                                     <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">1. Сюжет</h3>
 
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Субъект (Кто или что в кадре?)</label>
+                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Субъект (Кто или что в кадре?)</label>
                                         <input
                                             type="text"
                                             value={subject}
@@ -219,7 +219,7 @@ function App() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Действие и Поза (Что делает?)</label>
+                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Действие и Поза (Что делает?)</label>
                                         <input
                                             type="text"
                                             value={action}
@@ -229,7 +229,7 @@ function App() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Окружение (Где происходит?)</label>
+                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Окружение (Где происходит?)</label>
                                         <input
                                             type="text"
                                             value={environment}
@@ -245,7 +245,7 @@ function App() {
                                     <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">2. Стиль и Детали</h3>
 
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Стиль (Как это выглядит?)</label>
+                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Стиль (Как это выглядит?)</label>
                                         <select
                                             value={style}
                                             onChange={(e) => setStyle(e.target.value)}
@@ -262,7 +262,7 @@ function App() {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Материалы (Из чего сделано?)</label>
+                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Материалы (Из чего сделано?)</label>
                                         <input
                                             type="text"
                                             value={material}
@@ -273,7 +273,7 @@ function App() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-xs text-gray-400 ml-1 mb-1 block">Освещение</label>
+                                            <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Освещение</label>
                                             <input
                                                 type="text"
                                                 value={lighting}
@@ -283,7 +283,7 @@ function App() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-xs text-gray-400 ml-1 mb-1 block">Цвета</label>
+                                            <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Цвета</label>
                                             <input
                                                 type="text"
                                                 value={colors}
@@ -300,7 +300,7 @@ function App() {
                                     <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">3. Камера и Композиция</h3>
 
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Крупность плана</label>
+                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Крупность плана</label>
                                         <select
                                             value={shotSize}
                                             onChange={(e) => setShotSize(e.target.value)}
@@ -315,7 +315,7 @@ function App() {
 
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-xs text-gray-400 ml-1 mb-1 block">Ракурс</label>
+                                            <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Ракурс</label>
                                             <select
                                                 value={angle}
                                                 onChange={(e) => setAngle(e.target.value)}
@@ -329,7 +329,7 @@ function App() {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="text-xs text-gray-400 ml-1 mb-1 block">Фокус</label>
+                                            <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Фокус</label>
                                             <select
                                                 value={focus}
                                                 onChange={(e) => setFocus(e.target.value)}
@@ -349,7 +349,7 @@ function App() {
                                     <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">4. Дополнительно</h3>
 
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Текст на фото</label>
+                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Текст на фото</label>
                                         <input
                                             type="text"
                                             value={textOnPhoto}
@@ -359,7 +359,7 @@ function App() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Негативный промпт (Чего НЕ надо?)</label>
+                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Негативный промпт (Чего НЕ надо?)</label>
                                         <input
                                             type="text"
                                             value={negativePrompt}
@@ -373,7 +373,7 @@ function App() {
 
                             <div className="grid grid-cols-2 gap-4 mb-6 pt-2 border-t border-white/5">
                                 <div>
-                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Соотношение сторон</label>
+                                    <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Соотношение сторон</label>
                                     <select
                                         value={aspectRatio}
                                         onChange={(e) => setAspectRatio(e.target.value)}
@@ -386,7 +386,7 @@ function App() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Разрешение</label>
+                                    <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Разрешение</label>
                                     <select
                                         value={resolution}
                                         onChange={(e) => setResolution(e.target.value)}
