@@ -2,7 +2,7 @@ from aiogram import Router, types
 from aiogram.filters import CommandStart
 from aiogram.enums import ParseMode
 from aiogram.utils.markdown import hbold
-from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import WebAppInfo
 from sqlalchemy import select
 from database.db import get_db
 from database.models import User, Transaction

@@ -47,9 +47,22 @@ async def handle_web_app_data(message: types.Message):
             await message.answer(f"🎨 {model_id} рисует...", parse_mode=None)
             
             model = genai.GenerativeModel(model_id)
-            # Add style params if needed, e.g. "Cinematic style: " + prompt
+            # Extract params
+            aspect_ratio = params.get('aspectRatio', '1:1')
             
-            response = await asyncio.to_thread(model.generate_content, prompt)
+            # Map UI aspect ratio to Gemini API format if needed
+            # Assuming Gemini accepts "1:1", "16:9", etc. or needs specific string
+            
+            generation_config = genai.types.GenerationConfig(
+                media_resolution="media_resolution_unspecified", # or specific enum
+                aspect_ratio=aspect_ratio
+            )
+
+            response = await asyncio.to_thread(
+                model.generate_content, 
+                prompt, 
+                generation_config=generation_config
+            )
             
             print(f"DEBUG: Image Response: {response}")
             try:
