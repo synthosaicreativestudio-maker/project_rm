@@ -8,14 +8,25 @@ function App() {
     const [isLoading, setIsLoading] = useState(false)
 
     // Image Gen State
+    // Block 1: Subject
     const [subject, setSubject] = useState('')
+    const [action, setAction] = useState('')
+    const [environment, setEnvironment] = useState('')
+
+    // Block 2: Style & Details
     const [style, setStyle] = useState('Реализм')
     const [material, setMaterial] = useState('')
-    const [lens, setLens] = useState('Portrait (85–135mm)')
-    const [aperture, setAperture] = useState('f/1.8 (Bokeh)')
-    const [angle, setAngle] = useState('Low Angle')
-    const [lighting, setLighting] = useState('Cinematic Lighting')
-    const [background, setBackground] = useState('')
+    const [lighting, setLighting] = useState('')
+    const [colors, setColors] = useState('')
+
+    // Block 3: Camera & Composition
+    const [shotSize, setShotSize] = useState('')
+    const [angle, setAngle] = useState('')
+    const [focus, setFocus] = useState('')
+
+    // Block 4: Extra
+    const [textOnPhoto, setTextOnPhoto] = useState('')
+    const [negativePrompt, setNegativePrompt] = useState('')
 
     const [aspectRatio, setAspectRatio] = useState('1:1')
     const [resolution, setResolution] = useState('1K')
@@ -64,10 +75,26 @@ function App() {
         let prompt = ''
         if (type === 'image') {
             if (!subject.trim()) {
-                tg.showAlert("Пожалуйста, опишите объект (Subject)")
+                tg.showAlert("Пожалуйста, заполните Субъект")
                 return
             }
-            prompt = `Subject: ${subject}. Style: ${style}. Material: ${material}. Camera: ${lens}, ${aperture}, ${angle}. Lighting: ${lighting}. Background: ${background}.`
+
+            // Assemble structured prompt
+            const parts = []
+            if (subject) parts.push(`Subject: ${subject}`)
+            if (action) parts.push(`Action: ${action}`)
+            if (environment) parts.push(`Environment: ${environment}`)
+            if (style) parts.push(`Style: ${style}`)
+            if (material) parts.push(`Material: ${material}`)
+            if (lighting) parts.push(`Lighting: ${lighting}`)
+            if (colors) parts.push(`Colors: ${colors}`)
+            if (shotSize) parts.push(`Shot: ${shotSize}`)
+            if (angle) parts.push(`Angle: ${angle}`)
+            if (focus) parts.push(`Focus: ${focus}`)
+            if (textOnPhoto) parts.push(`Text: "${textOnPhoto}"`)
+            if (negativePrompt) parts.push(`--no ${negativePrompt}`)
+
+            prompt = parts.join('. ')
         } else {
             prompt = videoPrompt
             if (!prompt.trim()) {
@@ -175,124 +202,178 @@ function App() {
                                 <h2 className="text-2xl font-bold">Генерация Изображений</h2>
                             </div>
 
-                            <div className="flex-1 flex flex-col mb-4 space-y-3">
-                                {/* Subject */}
-                                <div>
-                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Объект (Кто/Что?)</label>
-                                    <input
-                                        type="text"
-                                        value={subject}
-                                        onChange={(e) => setSubject(e.target.value)}
-                                        placeholder="Например: Золотистый ретривер"
-                                        className="w-full glass-input rounded-xl px-4 py-2 text-sm"
-                                    />
-                                </div>
+                            <div className="flex-1 flex flex-col mb-4 space-y-4">
 
-                                {/* Style */}
-                                <div>
-                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Стиль</label>
-                                    <select
-                                        value={style}
-                                        onChange={(e) => setStyle(e.target.value)}
-                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
-                                    >
-                                        <option value="Реализм">Реализм</option>
-                                        <option value="Мультфильм">Мультфильм</option>
-                                        <option value="3D Рендер">3D Рендер</option>
-                                        <option value="Pixar">Pixar</option>
-                                        <option value="Акварель">Акварель</option>
-                                        <option value="Киберпанк">Киберпанк</option>
-                                        <option value="Аниме">Аниме</option>
-                                        <option value="Масло">Масло</option>
-                                    </select>
-                                </div>
+                                {/* Block 1: Subject */}
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">1. Сюжет</h3>
 
-                                {/* Material */}
-                                <div>
-                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Материал/Фактура</label>
-                                    <input
-                                        type="text"
-                                        value={material}
-                                        onChange={(e) => setMaterial(e.target.value)}
-                                        placeholder="Например: Матовый, Шелк"
-                                        className="w-full glass-input rounded-xl px-4 py-2 text-sm"
-                                    />
-                                </div>
-
-                                {/* Camera Settings Grid */}
-                                <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Объектив</label>
-                                        <select
-                                            value={lens}
-                                            onChange={(e) => setLens(e.target.value)}
-                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
-                                        >
-                                            <option value="Wide Angle (16–24mm)">Широкий угол</option>
-                                            <option value="Portrait (85–135mm)">Портрет</option>
-                                            <option value="Macro">Макро</option>
-                                        </select>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Субъект (Кто или что в кадре?)</label>
+                                        <input
+                                            type="text"
+                                            value={subject}
+                                            onChange={(e) => setSubject(e.target.value)}
+                                            placeholder="Рыжий кот в скафандре"
+                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                                        />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Диафрагма</label>
-                                        <select
-                                            value={aperture}
-                                            onChange={(e) => setAperture(e.target.value)}
-                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
-                                        >
-                                            <option value="f/1.8 (Bokeh)">f/1.8 (Боке)</option>
-                                            <option value="f/16 (Deep Focus)">f/16 (Резкость)</option>
-                                        </select>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Действие и Поза (Что делает?)</label>
+                                        <input
+                                            type="text"
+                                            value={action}
+                                            onChange={(e) => setAction(e.target.value)}
+                                            placeholder="Бежит по лужам"
+                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Окружение (Где происходит?)</label>
+                                        <input
+                                            type="text"
+                                            value={environment}
+                                            onChange={(e) => setEnvironment(e.target.value)}
+                                            placeholder="Марсианская пустыня"
+                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                                        />
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                {/* Block 2: Style & Details */}
+                                <div className="space-y-3 pt-2 border-t border-white/5">
+                                    <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">2. Стиль и Детали</h3>
+
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Ракурс</label>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Стиль (Как это выглядит?)</label>
                                         <select
-                                            value={angle}
-                                            onChange={(e) => setAngle(e.target.value)}
+                                            value={style}
+                                            onChange={(e) => setStyle(e.target.value)}
                                             className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
                                         >
-                                            <option value="Low Angle">Снизу</option>
-                                            <option value="High Angle">Сверху</option>
-                                            <option value="Dutch Angle">Наклон</option>
-                                            <option value="Eye Level">На уровне глаз</option>
+                                            <option value="Реализм">Реализм</option>
+                                            <option value="Pixar animation style">Pixar animation style</option>
+                                            <option value="3D render">3D render</option>
+                                            <option value="Маслом на холсте">Маслом на холсте</option>
+                                            <option value="Киберпанк">Киберпанк</option>
+                                            <option value="Фотореализм">Фотореализм</option>
+                                            <option value="Аниме">Аниме</option>
+                                            <option value="Акварель">Акварель</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Освещение</label>
-                                        <select
-                                            value={lighting}
-                                            onChange={(e) => setLighting(e.target.value)}
-                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
-                                        >
-                                            <option value="Cinematic Lighting">Киношное</option>
-                                            <option value="Rim Lighting">Контровое</option>
-                                            <option value="Volumetric Lighting">Объемное</option>
-                                            <option value="Golden Hour">Золотой час</option>
-                                            <option value="Blue Hour">Синий час</option>
-                                            <option value="Studio Lighting">Студийное</option>
-                                        </select>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Материалы (Из чего сделано?)</label>
+                                        <input
+                                            type="text"
+                                            value={material}
+                                            onChange={(e) => setMaterial(e.target.value)}
+                                            placeholder="Пушистая шерсть, Глянцевый пластик"
+                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs text-gray-400 ml-1 mb-1 block">Освещение</label>
+                                            <input
+                                                type="text"
+                                                value={lighting}
+                                                onChange={(e) => setLighting(e.target.value)}
+                                                placeholder="Мягкий свет, Неон"
+                                                className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-400 ml-1 mb-1 block">Цвета</label>
+                                            <input
+                                                type="text"
+                                                value={colors}
+                                                onChange={(e) => setColors(e.target.value)}
+                                                placeholder="Пастельные, Кислотные"
+                                                className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Background */}
-                                <div>
-                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Фон</label>
-                                    <input
-                                        type="text"
-                                        value={background}
-                                        onChange={(e) => setBackground(e.target.value)}
-                                        placeholder="Например: Старая библиотека"
-                                        className="w-full glass-input rounded-xl px-4 py-2 text-sm"
-                                    />
+                                {/* Block 3: Camera & Composition */}
+                                <div className="space-y-3 pt-2 border-t border-white/5">
+                                    <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">3. Камера и Композиция</h3>
+
+                                    <div>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Крупность плана</label>
+                                        <select
+                                            value={shotSize}
+                                            onChange={(e) => setShotSize(e.target.value)}
+                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                        >
+                                            <option value="">Не выбрано</option>
+                                            <option value="Close-up">Крупный план лица (Close-up)</option>
+                                            <option value="Waist shot">Поясной портрет</option>
+                                            <option value="Wide shot">Общий план (Wide shot)</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs text-gray-400 ml-1 mb-1 block">Ракурс</label>
+                                            <select
+                                                value={angle}
+                                                onChange={(e) => setAngle(e.target.value)}
+                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                            >
+                                                <option value="">Не выбрано</option>
+                                                <option value="Eye level">На уровне глаз</option>
+                                                <option value="Low angle">Вид снизу</option>
+                                                <option value="Top down">Вид сверху</option>
+                                                <option value="Dutch angle">Наклон</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-400 ml-1 mb-1 block">Фокус</label>
+                                            <select
+                                                value={focus}
+                                                onChange={(e) => setFocus(e.target.value)}
+                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                            >
+                                                <option value="">Не выбрано</option>
+                                                <option value="Bokeh">Размытый фон</option>
+                                                <option value="Deep focus">Всё в резкости</option>
+                                                <option value="Macro">Макро</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Block 4: Extra */}
+                                <div className="space-y-3 pt-2 border-t border-white/5">
+                                    <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">4. Дополнительно</h3>
+
+                                    <div>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Текст на фото</label>
+                                        <input
+                                            type="text"
+                                            value={textOnPhoto}
+                                            onChange={(e) => setTextOnPhoto(e.target.value)}
+                                            placeholder="Вывеска 'COFFEE'"
+                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Негативный промпт (Чего НЕ надо?)</label>
+                                        <input
+                                            type="text"
+                                            value={negativePrompt}
+                                            onChange={(e) => setNegativePrompt(e.target.value)}
+                                            placeholder="Размытие, текст, лишние пальцы"
+                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="grid grid-cols-2 gap-4 mb-6 pt-2 border-t border-white/5">
                                 <div>
-                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Соотношение</label>
+                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Соотношение сторон</label>
                                     <select
                                         value={aspectRatio}
                                         onChange={(e) => setAspectRatio(e.target.value)}
