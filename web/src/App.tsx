@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Bot, Image as ImageIcon, Video, Sparkles, Upload, X, Smartphone, Monitor, Film, User, MessageSquare } from 'lucide-react'
+import { Bot, Image as ImageIcon, Video, Sparkles, Upload, X, User, MessageSquare } from 'lucide-react'
 
 function App() {
     const [activeTab, setActiveTab] = useState('chat')
