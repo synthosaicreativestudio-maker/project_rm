@@ -8,7 +8,14 @@ function App() {
     const [isLoading, setIsLoading] = useState(false) // Kept for button loading state if needed, though sendData is instant.
 
     // Image Gen State
-    const [imagePrompt, setImagePrompt] = useState('')
+    const [subject, setSubject] = useState('')
+    const [material, setMaterial] = useState('')
+    const [lens, setLens] = useState('Portrait (85–135mm)')
+    const [aperture, setAperture] = useState('f/1.8 (Bokeh)')
+    const [angle, setAngle] = useState('Low Angle')
+    const [lighting, setLighting] = useState('Cinematic Lighting')
+    const [background, setBackground] = useState('')
+
     const [aspectRatio, setAspectRatio] = useState('1:1')
     const [resolution, setResolution] = useState('1K')
     const [imageRefs, setImageRefs] = useState<File[]>([])
@@ -36,7 +43,8 @@ function App() {
 
 
     const enhancePrompt = async (type: 'image' | 'video') => {
-        const currentPrompt = type === 'image' ? imagePrompt : videoPrompt
+        // For image, we might want to enhance the 'subject' or just disable enhance for now
+        const currentPrompt = type === 'image' ? subject : videoPrompt
         if (!currentPrompt.trim()) return
 
         setIsLoading(true)
@@ -47,7 +55,10 @@ function App() {
                 body: JSON.stringify({ prompt: currentPrompt, type })
             })
             const data = await response.json()
-            if (type === 'image') setImagePrompt(data.enhanced_prompt)
+            if (type === 'image') {
+                // Enhance logic for structured form is complex, skipping for now or user can request later
+                // setImagePrompt(data.enhanced_prompt) 
+            }
             else setVideoPrompt(data.enhanced_prompt)
         } catch (error) {
             console.error(error)
@@ -63,10 +74,20 @@ function App() {
             return
         }
 
-        const prompt = type === 'image' ? imagePrompt : videoPrompt
-        if (!prompt.trim()) {
-            tg.showAlert("Please enter a prompt")
-            return
+        let prompt = ''
+        if (type === 'image') {
+            if (!subject.trim()) {
+                tg.showAlert("Please describe the subject")
+                return
+            }
+            // Assemble structured prompt
+            prompt = `Subject: ${subject}. Material: ${material}. Camera: ${lens}, ${aperture}, ${angle}. Lighting: ${lighting}. Background: ${background}.`
+        } else {
+            prompt = videoPrompt
+            if (!prompt.trim()) {
+                tg.showAlert("Please enter a prompt")
+                return
+            }
         }
 
         const data = {
@@ -221,23 +242,99 @@ function App() {
                                 </div>
                             </div>
 
-                            <div className="flex-1 flex flex-col mb-4 relative">
-                                <label className="text-xs text-gray-400 ml-1 mb-1">Prompt</label>
-                                <div className="relative">
-                                    <textarea
-                                        value={imagePrompt}
-                                        onChange={(e) => setImagePrompt(e.target.value)}
-                                        placeholder="Describe your image in detail..."
-                                        className="w-full glass-input rounded-xl px-4 py-3 text-sm resize-none min-h-[100px] pr-10"
+                            <div className="flex-1 flex flex-col mb-4 space-y-3">
+                                {/* Subject */}
+                                <div>
+                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Subject (Who/What?)</label>
+                                    <input
+                                        type="text"
+                                        value={subject}
+                                        onChange={(e) => setSubject(e.target.value)}
+                                        placeholder="e.g. Golden Retriever with wet fur"
+                                        className="w-full glass-input rounded-xl px-4 py-2 text-sm"
                                     />
-                                    <button
-                                        onClick={() => enhancePrompt('image')}
-                                        disabled={isLoading || !imagePrompt}
-                                        className="absolute bottom-2 right-2 p-2 bg-neon-purple/20 rounded-lg text-neon-purple hover:bg-neon-purple/30 disabled:opacity-50 transition-colors"
-                                        title="Enhance with AI"
-                                    >
-                                        <Sparkles size={16} />
-                                    </button>
+                                </div>
+
+                                {/* Material */}
+                                <div>
+                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Material/Texture</label>
+                                    <input
+                                        type="text"
+                                        value={material}
+                                        onChange={(e) => setMaterial(e.target.value)}
+                                        placeholder="e.g. Matte, Glossy Plastic, Silk"
+                                        className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                                    />
+                                </div>
+
+                                {/* Camera Settings Grid */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Lens</label>
+                                        <select
+                                            value={lens}
+                                            onChange={(e) => setLens(e.target.value)}
+                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                        >
+                                            <option value="Wide Angle (16–24mm)">Wide Angle (16–24mm)</option>
+                                            <option value="Portrait (85–135mm)">Portrait (85–135mm)</option>
+                                            <option value="Macro">Macro</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Aperture</label>
+                                        <select
+                                            value={aperture}
+                                            onChange={(e) => setAperture(e.target.value)}
+                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                        >
+                                            <option value="f/1.8 (Bokeh)">f/1.8 (Bokeh)</option>
+                                            <option value="f/16 (Deep Focus)">f/16 (Deep Focus)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Angle</label>
+                                        <select
+                                            value={angle}
+                                            onChange={(e) => setAngle(e.target.value)}
+                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                        >
+                                            <option value="Low Angle">Low Angle</option>
+                                            <option value="High Angle">High Angle</option>
+                                            <option value="Dutch Angle">Dutch Angle</option>
+                                            <option value="Eye Level">Eye Level</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 ml-1 mb-1 block">Lighting</label>
+                                        <select
+                                            value={lighting}
+                                            onChange={(e) => setLighting(e.target.value)}
+                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                        >
+                                            <option value="Cinematic Lighting">Cinematic</option>
+                                            <option value="Rim Lighting">Rim Lighting</option>
+                                            <option value="Volumetric Lighting">Volumetric</option>
+                                            <option value="Golden Hour">Golden Hour</option>
+                                            <option value="Blue Hour">Blue Hour</option>
+                                            <option value="Studio Lighting">Studio</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Background */}
+                                <div>
+                                    <label className="text-xs text-gray-400 ml-1 mb-1 block">Background</label>
+                                    <input
+                                        type="text"
+                                        value={background}
+                                        onChange={(e) => setBackground(e.target.value)}
+                                        placeholder="e.g. Old library, Solid color"
+                                        className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                                    />
                                 </div>
                             </div>
 
