@@ -109,7 +109,7 @@ function App() {
             params: type === 'image' ? { aspectRatio, resolution } : { orientation: videoOrientation }
         }
 
-        tg.showAlert(`Отправляю запрос: ${type === 'image' ? 'Фото' : 'Видео'}...`)
+
         tg.sendData(JSON.stringify(data))
     }
 
@@ -128,7 +128,7 @@ function App() {
             params: {}
         }
 
-        tg.showAlert("Отправляю текстовый запрос...")
+
         tg.sendData(JSON.stringify(data))
     }
 
