@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Bot, Image as ImageIcon, Video, Sparkles, Upload, X, User, MessageSquare, ChevronDown } from 'lucide-react'
+import { Image as ImageIcon, Video, Sparkles, Upload, X, User, ChevronDown } from 'lucide-react'
 
 
 
@@ -23,8 +23,8 @@ interface Config {
 }
 
 function App() {
-    const [activeTab, setActiveTab] = useState('chat')
-    const [input, setInput] = useState('')
+    const [activeTab, setActiveTab] = useState('image')
+    // const [input, setInput] = useState('') // Removed chat input
     const [isLoading, setIsLoading] = useState(false)
 
     // Dynamic State
@@ -219,6 +219,8 @@ function App() {
         }
     }
 
+    // Chat function removed
+    /*
     const sendTextMessage = () => {
         const tg = (window as any).Telegram?.WebApp
         if (!tg) return
@@ -236,6 +238,7 @@ function App() {
 
         tg.sendData(JSON.stringify(data))
     }
+    */
 
     // Helper to render fields
     const renderField = (field: Field) => {
@@ -332,6 +335,8 @@ function App() {
                     transition={{ duration: 0.3 }}
                     className="glass-panel rounded-3xl p-4 flex-1 flex flex-col overflow-hidden relative"
                 >
+                    {/* Chat Tab Removed */}
+                    {/* 
                     {activeTab === 'chat' && (
                         <div className="flex flex-col h-full justify-center items-center p-4">
                             <Bot size={64} className="text-neon-blue mb-6 drop-shadow-[0_0_15px_rgba(0,243,255,0.5)]" />
@@ -361,6 +366,7 @@ function App() {
                             </div>
                         </div>
                     )}
+                    */}
 
                     {activeTab === 'image' && (
                         <div className="flex flex-col h-full p-4 overflow-y-auto">
@@ -560,7 +566,7 @@ function App() {
             {/* Bottom Navigation */}
             <nav className="fixed bottom-4 left-4 right-4 max-w-md mx-auto glass-panel p-2 rounded-2xl flex justify-between items-center z-50 shadow-[0_5px_20px_rgba(0,0,0,0.5)]">
                 {[
-                    { id: 'chat', icon: MessageSquare, label: 'Чат' },
+                    // { id: 'chat', icon: MessageSquare, label: 'Чат' }, // Removed
                     { id: 'image', icon: ImageIcon, label: 'Фото' },
                     { id: 'video', icon: Video, label: 'Видео' },
                     { id: 'profile', icon: User, label: 'Профиль' }
