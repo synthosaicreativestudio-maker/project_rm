@@ -36,8 +36,8 @@ Your primary goal is to help users utilize the "Project_RM" Telegram Bot to crea
 **TONE:**
 Professional, enthusiastic, and helpful. Speak in Russian unless asked otherwise.
 """
-        self.model = genai.GenerativeModel('gemini-1.5-pro-latest', system_instruction=system_instruction) 
-        self.vision_model = genai.GenerativeModel('gemini-1.5-pro-latest', system_instruction=system_instruction)
+        self.model = genai.GenerativeModel(settings.MODELS['text'], system_instruction=system_instruction) 
+        self.vision_model = genai.GenerativeModel(settings.MODELS['text'], system_instruction=system_instruction)
 
     async def generate_text(self, prompt: str) -> Optional[str]:
         """
