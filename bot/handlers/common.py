@@ -22,9 +22,12 @@ async def command_start_handler(message: types.Message) -> None:
     # Use configured WEBAPP_URL or a placeholder if not set
     webapp_url = settings.WEBAPP_URL or "https://google.com" 
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 Open App", web_app=WebAppInfo(url=webapp_url))]
-    ])
+    from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+
+    # Use ReplyKeyboardMarkup for sendData compatibility
+    kb = ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="🚀 Open App", web_app=WebAppInfo(url=webapp_url))]
+    ], resize_keyboard=True)
 
     async for session in get_db():
         result = await session.execute(select(User).where(User.id == user_id))
@@ -41,10 +44,10 @@ async def command_start_handler(message: types.Message) -> None:
                 f"Привет, {hbold(full_name)}! 👋\n\n"
                 f"Я — <b>Project_RM</b>, твой персональный AI-консультант и креативный партнер.\n\n"
                 f"<b>Чем я могу помочь?</b>\n"
-                f"🎨 <b>Генерация:</b> Открой Mini App (кнопка ниже), чтобы создавать фото и видео.\n"
+                f"🎨 <b>Генерация:</b> Нажми кнопку <b>🚀 Open App</b> внизу экрана, чтобы создавать фото и видео.\n"
                 f"🧠 <b>Идеи:</b> Напиши мне тему, и я придумаю сценарий или промт.\n"
                 f"✨ <b>Улучшение:</b> Я помогу докрутить твои идеи до идеала.\n\n"
-                f"Просто напиши мне или нажми кнопку, чтобы начать творить! 🚀",
+                f"Нажми кнопку в меню клавиатуры, чтобы начать! 🚀",
                 reply_markup=kb
             )
         else:
