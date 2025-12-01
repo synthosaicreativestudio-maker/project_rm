@@ -23,11 +23,11 @@ async def main():
     from bot.handlers.admin import router as admin_router
     dp.include_router(admin_router)
 
-    from bot.handlers.common import router as common_router
-    dp.include_router(common_router)
-
     from bot.handlers.webapp_data import router as webapp_data_router
     dp.include_router(webapp_data_router)
+
+    from bot.handlers.common import router as common_router
+    dp.include_router(common_router)
 
     from database.db import init_db
     await init_db()

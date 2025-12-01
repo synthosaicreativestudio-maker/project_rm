@@ -144,14 +144,30 @@ function App() {
             }
         }
 
-        const data = {
-            type: type,
-            prompt: prompt,
-            params: type === 'image' ? { aspectRatio: formData['aspectRatio'] || '1:1', resolution: formData['resolution'] || '1K' } : { orientation: videoOrientation }
-        }
+        try {
+            tg.showAlert("Debug: Start Sending...")
 
-        tg.sendData(JSON.stringify(data))
-        tg.close()
+            const data = {
+                type: type,
+                prompt: prompt,
+                params: type === 'image' ? { aspectRatio: formData['aspectRatio'] || '1:1', resolution: formData['resolution'] || '1K' } : { orientation: videoOrientation }
+            }
+
+            tg.showAlert(`Debug: Data prepared. Sending...`)
+            tg.sendData(JSON.stringify(data))
+            tg.showAlert("Debug: Data sent! Closing in 1s...")
+
+            setTimeout(() => {
+                try {
+                    tg.close()
+                } catch (e) {
+                    tg.showAlert(`Debug: Error closing: ${e}`)
+                }
+            }, 1000)
+
+        } catch (e) {
+            tg.showAlert(`CRITICAL ERROR: ${e}`)
+        }
     }
 
     const sendTextMessage = () => {
