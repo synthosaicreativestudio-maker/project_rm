@@ -26,6 +26,7 @@ async def handle_web_app_data(message: types.Message):
         prompt = data.get('prompt')
         params = data.get('params', {})
 
+        print(f"DEBUG: Received WebApp data: {action_type} | {prompt}") # Debug print
         logger.info(f"Received WebApp data: {action_type} | {prompt[:50]}...")
 
         # Feedback to user

@@ -75,6 +75,7 @@ function App() {
             params: type === 'image' ? { aspectRatio, resolution } : { orientation: videoOrientation }
         }
 
+        tg.showAlert(`Sending ${type} request...`) // Debug alert
         tg.sendData(JSON.stringify(data))
     }
 
@@ -93,6 +94,7 @@ function App() {
             params: {}
         }
 
+        tg.showAlert("Sending text request...") // Debug alert
         tg.sendData(JSON.stringify(data))
     }
 
