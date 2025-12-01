@@ -186,7 +186,8 @@ function App() {
             if (d.textOnPhoto) finalPrompt += `, Text: "${d.textOnPhoto}"`
             if (d.negative_prompt) finalPrompt += ` --no ${d.negative_prompt}`
 
-            finalPrompt += ", high quality, 8k"
+            const resolution = d.resolution || '1K'
+            finalPrompt += `, high quality, ${resolution}`
             prompt = finalPrompt
 
         } else {
