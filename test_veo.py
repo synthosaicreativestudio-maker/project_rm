@@ -18,7 +18,7 @@ else:
 # 2. Инициализация
 try:
     vertexai.init(project=PROJECT_ID, location=LOCATION)
-    print(f"✅ Vertex AI инициализирован.")
+    print("✅ Vertex AI инициализирован.")
 except Exception as e:
     print(f"❌ Ошибка init: {e}")
     exit()

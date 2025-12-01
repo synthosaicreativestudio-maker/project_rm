@@ -2,6 +2,7 @@ import logging
 from aiohttp import web
 from aiogram import Router
 from services.gemini import gemini_service
+from config.ui_config import UI_CONFIG
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ async def handle_generate_video(request):
     # Mock generation
     return web.json_response({'status': 'success', 'message': 'Video generation started... (Simulation)'})
 
-from config.ui_config import UI_CONFIG
+
 
 async def handle_config(request):
     return web.json_response(UI_CONFIG)
