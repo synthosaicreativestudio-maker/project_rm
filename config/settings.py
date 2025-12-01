@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     MODELS: dict = {
         "text": "gemini-3-pro-preview",
         "video": "veo-3.1-fast-generate-preview", 
-        "image": "nano-banana-pro-preview"
+        "image": "gemini-3-pro-image-preview"
     }
 
     @property

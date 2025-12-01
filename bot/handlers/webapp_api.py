@@ -65,11 +65,17 @@ async def handle_generate_video(request):
     # Mock generation
     return web.json_response({'status': 'success', 'message': 'Video generation started... (Simulation)'})
 
+from config.ui_config import UI_CONFIG
+
+async def handle_config(request):
+    return web.json_response(UI_CONFIG)
+
 def setup_web_routes(app):
     app.router.add_post('/api/chat/', handle_chat)
     app.router.add_post('/api/enhance-prompt/', handle_enhance_prompt)
     app.router.add_post('/api/generate-image/', handle_generate_image)
     app.router.add_post('/api/generate-video/', handle_generate_video)
+    app.router.add_get('/api/config', handle_config)
     
     # CORS setup (basic)
     import aiohttp_cors

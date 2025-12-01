@@ -1,40 +1,66 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Bot, Image as ImageIcon, Video, Sparkles, Upload, X, User, MessageSquare } from 'lucide-react'
+import { Bot, Image as ImageIcon, Video, Sparkles, Upload, X, User, MessageSquare, ChevronDown } from 'lucide-react'
+
+
+
+interface Field {
+    id: string
+    label: string
+    type: 'text' | 'select' | 'select-or-type'
+    placeholder?: string
+    options?: string[]
+}
+
+interface Block {
+    id: string
+    title: string
+    fields: Field[]
+}
+
+interface Config {
+    blocks: Block[]
+}
 
 function App() {
     const [activeTab, setActiveTab] = useState('chat')
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
 
-    // Image Gen State
-    // Block 1: Subject
-    const [subject, setSubject] = useState('')
-    const [action, setAction] = useState('')
-    const [environment, setEnvironment] = useState('')
+    // Dynamic State
+    const [config, setConfig] = useState<Config | null>(null)
+    const [formData, setFormData] = useState<Record<string, string>>({})
 
-    // Block 2: Style & Details
-    const [style, setStyle] = useState('Реализм')
-    const [material, setMaterial] = useState('')
-    const [lighting, setLighting] = useState('')
-    const [colors, setColors] = useState('')
-
-    // Block 3: Camera & Composition
-    const [shotSize, setShotSize] = useState('')
-    const [angle, setAngle] = useState('')
-    const [focus, setFocus] = useState('')
-
-    // Block 4: Extra
-    const [textOnPhoto, setTextOnPhoto] = useState('')
-    const [negativePrompt, setNegativePrompt] = useState('')
-
-    const [aspectRatio, setAspectRatio] = useState('1:1')
-    const [resolution, setResolution] = useState('1K')
-
-    // Video Gen State
+    // Video State (kept separate as it's not fully dynamic in this spec yet, or is it?)
+    // The spec focuses on Image Gen. Video Gen seems to be separate.
     const [videoPrompt, setVideoPrompt] = useState('')
     const [videoOrientation, setVideoOrientation] = useState('9:16')
     const [videoRef, setVideoRef] = useState<File | null>(null)
+
+    // Fetch Config on Mount
+    useEffect(() => {
+        fetch('http://localhost:8000/api/config')
+            .then(res => res.json())
+            .then(data => {
+                setConfig(data)
+                // Initialize formData with defaults or empty strings
+                const initialData: Record<string, string> = {}
+                data.blocks.forEach((block: Block) => {
+                    block.fields.forEach((field: Field) => {
+                        initialData[field.id] = ''
+                        // Set default for specific fields if needed, e.g. Style
+                        if (field.id === 'style') initialData[field.id] = 'Реализм'
+                    })
+                })
+                // Merge with existing if needed, but here we just set it
+                setFormData(prev => ({ ...initialData, ...prev }))
+            })
+            .catch(err => console.error("Failed to load config:", err))
+    }, [])
+
+    const handleInputChange = (id: string, value: string) => {
+        setFormData(prev => ({ ...prev, [id]: value }))
+    }
 
     const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -43,8 +69,10 @@ function App() {
     }
 
     const enhancePrompt = async (type: 'image' | 'video') => {
-        const currentPrompt = type === 'image' ? subject : videoPrompt
-        if (!currentPrompt.trim()) return
+        // For image, we might need to construct a prompt from formData first
+        // But for now, let's just support video prompt enhancement or basic image subject
+        const currentPrompt = type === 'image' ? formData['subject'] : videoPrompt
+        if (!currentPrompt?.trim()) return
 
         setIsLoading(true)
         try {
@@ -55,7 +83,7 @@ function App() {
             })
             const data = await response.json()
             if (type === 'image') {
-                // Logic for image prompt enhancement if needed
+                handleInputChange('subject', data.enhanced_prompt)
             }
             else setVideoPrompt(data.enhanced_prompt)
         } catch (error) {
@@ -74,27 +102,40 @@ function App() {
 
         let prompt = ''
         if (type === 'image') {
-            if (!subject.trim()) {
+            if (!formData['subject']?.trim()) {
                 tg.showAlert("Пожалуйста, заполните Субъект")
                 return
             }
 
-            // Assemble structured prompt
-            const parts = []
-            if (subject) parts.push(`Subject: ${subject}`)
-            if (action) parts.push(`Action: ${action}`)
-            if (environment) parts.push(`Environment: ${environment}`)
-            if (style) parts.push(`Style: ${style}`)
-            if (material) parts.push(`Material: ${material}`)
-            if (lighting) parts.push(`Lighting: ${lighting}`)
-            if (colors) parts.push(`Colors: ${colors}`)
-            if (shotSize) parts.push(`Shot: ${shotSize}`)
-            if (angle) parts.push(`Angle: ${angle}`)
-            if (focus) parts.push(`Focus: ${focus}`)
-            if (textOnPhoto) parts.push(`Text: "${textOnPhoto}"`)
-            if (negativePrompt) parts.push(`--no ${negativePrompt}`)
+            // Assemble structured prompt based on Dynamic Logic
+            // Logic: Subject, Action, in Environment, Style style, made of Material, Lighting, Colors color palette, shot from Angle, Shot size, Focus, Text: "...", --no Negative
 
-            prompt = parts.join('. ')
+            let finalPrompt = ""
+            const d = formData
+
+            // 1. Base
+            if (d.subject) finalPrompt += d.subject
+            if (d.action) finalPrompt += ", " + d.action
+            if (d.environment) finalPrompt += ", in " + d.environment
+
+            // 2. Visuals
+            if (d.style) finalPrompt += ", " + d.style + " style"
+            if (d.materials) finalPrompt += ", made of " + d.materials
+            if (d.lighting) finalPrompt += ", " + d.lighting
+            if (d.colors) finalPrompt += ", " + d.colors + " color palette"
+
+            // 3. Camera
+            if (d.camera_angle) finalPrompt += ", shot from " + d.camera_angle
+            if (d.shot_size) finalPrompt += ", " + d.shot_size
+            if (d.focus) finalPrompt += ", " + d.focus
+
+            // 4. Extra
+            if (d.textOnPhoto) finalPrompt += `, Text: "${d.textOnPhoto}"`
+            if (d.negative_prompt) finalPrompt += ` --no ${d.negative_prompt}`
+
+            finalPrompt += ", high quality, 8k"
+            prompt = finalPrompt
+
         } else {
             prompt = videoPrompt
             if (!prompt.trim()) {
@@ -106,9 +147,8 @@ function App() {
         const data = {
             type: type,
             prompt: prompt,
-            params: type === 'image' ? { aspectRatio, resolution } : { orientation: videoOrientation }
+            params: type === 'image' ? { aspectRatio: formData['aspectRatio'] || '1:1', resolution: formData['resolution'] || '1K' } : { orientation: videoOrientation }
         }
-
 
         tg.sendData(JSON.stringify(data))
     }
@@ -128,8 +168,71 @@ function App() {
             params: {}
         }
 
-
         tg.sendData(JSON.stringify(data))
+    }
+
+    // Helper to render fields
+    const renderField = (field: Field) => {
+        const value = formData[field.id] || ''
+
+        if (field.type === 'select') {
+            return (
+                <div key={field.id}>
+                    <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">{field.label}</label>
+                    <div className="relative">
+                        <select
+                            value={value}
+                            onChange={(e) => handleInputChange(field.id, e.target.value)}
+                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50 appearance-none"
+                        >
+                            <option value="">Не выбрано</option>
+                            {field.options?.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                    </div>
+                </div>
+            )
+        }
+
+        if (field.type === 'select-or-type') {
+            return (
+                <div key={field.id}>
+                    <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">{field.label}</label>
+                    <div className="relative group">
+                        <input
+                            type="text"
+                            value={value}
+                            onChange={(e) => handleInputChange(field.id, e.target.value)}
+                            placeholder={field.placeholder}
+                            list={`list-${field.id}`}
+                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                        />
+                        <datalist id={`list-${field.id}`}>
+                            {field.options?.map(opt => (
+                                <option key={opt} value={opt} />
+                            ))}
+                        </datalist>
+                        {/* Custom dropdown arrow to hint it's a list */}
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none opacity-50" size={16} />
+                    </div>
+                </div>
+            )
+        }
+
+        return (
+            <div key={field.id}>
+                <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">{field.label}</label>
+                <input
+                    type="text"
+                    value={value}
+                    onChange={(e) => handleInputChange(field.id, e.target.value)}
+                    placeholder={field.placeholder}
+                    className="w-full glass-input rounded-xl px-4 py-2 text-sm"
+                />
+            </div>
+        )
     }
 
     return (
@@ -202,181 +305,29 @@ function App() {
                                 <h2 className="text-2xl font-bold">Генерация Изображений</h2>
                             </div>
 
-                            <div className="flex-1 flex flex-col mb-4 space-y-4">
-
-                                {/* Block 1: Subject */}
-                                <div className="space-y-3">
-                                    <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">1. Сюжет</h3>
-
-                                    <div>
-                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Субъект (Кто или что в кадре?)</label>
-                                        <input
-                                            type="text"
-                                            value={subject}
-                                            onChange={(e) => setSubject(e.target.value)}
-                                            placeholder="Рыжий кот в скафандре"
-                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Действие и Поза (Что делает?)</label>
-                                        <input
-                                            type="text"
-                                            value={action}
-                                            onChange={(e) => setAction(e.target.value)}
-                                            placeholder="Бежит по лужам"
-                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Окружение (Где происходит?)</label>
-                                        <input
-                                            type="text"
-                                            value={environment}
-                                            onChange={(e) => setEnvironment(e.target.value)}
-                                            placeholder="Марсианская пустыня"
-                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
-                                        />
-                                    </div>
+                            {!config ? (
+                                <div className="flex items-center justify-center flex-1">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-purple"></div>
                                 </div>
-
-                                {/* Block 2: Style & Details */}
-                                <div className="space-y-3 pt-2 border-t border-white/5">
-                                    <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">2. Стиль и Детали</h3>
-
-                                    <div>
-                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Стиль (Как это выглядит?)</label>
-                                        <select
-                                            value={style}
-                                            onChange={(e) => setStyle(e.target.value)}
-                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
-                                        >
-                                            <option value="Реализм">Реализм</option>
-                                            <option value="Pixar animation style">Pixar animation style</option>
-                                            <option value="3D render">3D render</option>
-                                            <option value="Маслом на холсте">Маслом на холсте</option>
-                                            <option value="Киберпанк">Киберпанк</option>
-                                            <option value="Фотореализм">Фотореализм</option>
-                                            <option value="Аниме">Аниме</option>
-                                            <option value="Акварель">Акварель</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Материалы (Из чего сделано?)</label>
-                                        <input
-                                            type="text"
-                                            value={material}
-                                            onChange={(e) => setMaterial(e.target.value)}
-                                            placeholder="Пушистая шерсть, Глянцевый пластик"
-                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Освещение</label>
-                                            <input
-                                                type="text"
-                                                value={lighting}
-                                                onChange={(e) => setLighting(e.target.value)}
-                                                placeholder="Мягкий свет, Неон"
-                                                className="w-full glass-input rounded-xl px-4 py-2 text-sm"
-                                            />
+                            ) : (
+                                <div className="flex-1 flex flex-col mb-4 space-y-4">
+                                    {config.blocks.map((block) => (
+                                        <div key={block.id} className="space-y-3 pt-2 border-t border-white/5 first:border-0 first:pt-0">
+                                            <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">{block.title}</h3>
+                                            <div className="space-y-3">
+                                                {block.fields.map(field => renderField(field))}
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Цвета</label>
-                                            <input
-                                                type="text"
-                                                value={colors}
-                                                onChange={(e) => setColors(e.target.value)}
-                                                placeholder="Пастельные, Кислотные"
-                                                className="w-full glass-input rounded-xl px-4 py-2 text-sm"
-                                            />
-                                        </div>
-                                    </div>
+                                    ))}
                                 </div>
-
-                                {/* Block 3: Camera & Composition */}
-                                <div className="space-y-3 pt-2 border-t border-white/5">
-                                    <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">3. Камера и Композиция</h3>
-
-                                    <div>
-                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Крупность плана</label>
-                                        <select
-                                            value={shotSize}
-                                            onChange={(e) => setShotSize(e.target.value)}
-                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
-                                        >
-                                            <option value="">Не выбрано</option>
-                                            <option value="Close-up">Крупный план лица (Close-up)</option>
-                                            <option value="Waist shot">Поясной портрет</option>
-                                            <option value="Wide shot">Общий план (Wide shot)</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Ракурс</label>
-                                            <select
-                                                value={angle}
-                                                onChange={(e) => setAngle(e.target.value)}
-                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
-                                            >
-                                                <option value="">Не выбрано</option>
-                                                <option value="Eye level">На уровне глаз</option>
-                                                <option value="Low angle">Вид снизу</option>
-                                                <option value="Top down">Вид сверху</option>
-                                                <option value="Dutch angle">Наклон</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Фокус</label>
-                                            <select
-                                                value={focus}
-                                                onChange={(e) => setFocus(e.target.value)}
-                                                className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
-                                            >
-                                                <option value="">Не выбрано</option>
-                                                <option value="Bokeh">Размытый фон</option>
-                                                <option value="Deep focus">Всё в резкости</option>
-                                                <option value="Macro">Макро</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Block 4: Extra */}
-                                <div className="space-y-3 pt-2 border-t border-white/5">
-                                    <h3 className="text-sm font-bold text-neon-purple/80 uppercase tracking-wider">4. Дополнительно</h3>
-
-                                    <div>
-                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Текст на фото</label>
-                                        <input
-                                            type="text"
-                                            value={textOnPhoto}
-                                            onChange={(e) => setTextOnPhoto(e.target.value)}
-                                            placeholder="Вывеска 'COFFEE'"
-                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Негативный промпт (Чего НЕ надо?)</label>
-                                        <input
-                                            type="text"
-                                            value={negativePrompt}
-                                            onChange={(e) => setNegativePrompt(e.target.value)}
-                                            placeholder="Размытие, текст, лишние пальцы"
-                                            className="w-full glass-input rounded-xl px-4 py-2 text-sm"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            )}
 
                             <div className="grid grid-cols-2 gap-4 mb-6 pt-2 border-t border-white/5">
                                 <div>
                                     <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Соотношение сторон</label>
                                     <select
-                                        value={aspectRatio}
-                                        onChange={(e) => setAspectRatio(e.target.value)}
+                                        value={formData['aspectRatio'] || '1:1'}
+                                        onChange={(e) => handleInputChange('aspectRatio', e.target.value)}
                                         className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
                                     >
                                         <option value="1:1">1:1 (Квадрат)</option>
@@ -388,8 +339,8 @@ function App() {
                                 <div>
                                     <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Разрешение</label>
                                     <select
-                                        value={resolution}
-                                        onChange={(e) => setResolution(e.target.value)}
+                                        value={formData['resolution'] || '1K'}
+                                        onChange={(e) => handleInputChange('resolution', e.target.value)}
                                         className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
                                     >
                                         <option value="1K">1K (Стандарт)</option>
