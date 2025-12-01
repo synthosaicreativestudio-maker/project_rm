@@ -20,6 +20,14 @@ async def main():
     bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
 
+    @dp.update.outer_middleware
+    async def log_update_middleware(handler, event, data):
+        if event.message:
+            print(f"DEBUG: Received message: {event.message.content_type}")
+            if event.message.web_app_data:
+                print(f"DEBUG: WebApp Data: {event.message.web_app_data.data}")
+        return await handler(event, data)
+
     from bot.handlers.admin import router as admin_router
     dp.include_router(admin_router)
 
