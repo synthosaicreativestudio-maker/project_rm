@@ -30,7 +30,7 @@ async def handle_web_app_data(message: types.Message):
         logger.info(f"Received WebApp data: {action_type} | {prompt[:50]}...")
 
         # Feedback to user
-        await message.answer(f"✅ Задача получена: {action_type.upper()}\nПромт: {prompt[:50]}...")
+        await message.answer(f"✅ Задача получена: {action_type.upper()}\nПромт: {prompt[:50]}...", parse_mode=None)
 
         if action_type == 'text':
             # Gemini 3.0 Pro Logic
@@ -39,37 +39,35 @@ async def handle_web_app_data(message: types.Message):
             
             # Run blocking generation in thread
             response = await asyncio.to_thread(model.generate_content, prompt)
-            await message.answer(response.text)
+            await message.answer(response.text, parse_mode=None)
 
         elif action_type == 'image':
             # Nanabanana Pro Logic
             model_id = settings.MODELS['image']
-            await message.answer(f"🎨 {model_id} рисует...")
+            await message.answer(f"🎨 {model_id} рисует...", parse_mode=None)
             
             model = genai.GenerativeModel(model_id)
             # Add style params if needed, e.g. "Cinematic style: " + prompt
             
             response = await asyncio.to_thread(model.generate_content, prompt)
             
-            # Assuming response contains image data (blob/bytes)
-            # Note: The actual API response structure for image gen might differ. 
-            # This follows the TZ skeleton.
-            if response.parts:
-                # Check if parts contain inline_data (images)
-                # This is a placeholder based on TZ. Actual response inspection might be needed.
-                try:
+            print(f"DEBUG: Image Response: {response}")
+            try:
+                if response.parts:
                     img_data = response.parts[0].inline_data.data
                     await message.answer_photo(photo=img_data, caption=f"Модель: {model_id}")
-                except AttributeError:
-                    # Fallback if structure is different or it returned text
-                    await message.answer(f"Результат: {response.text}")
+                else:
+                    await message.answer(f"Результат (без частей): {response.text}", parse_mode=None)
+            except Exception as e:
+                print(f"DEBUG: Error parsing image response: {e}")
+                await message.answer(f"Ошибка обработки ответа: {e}", parse_mode=None)
 
         elif action_type == 'video':
             # Veo 3.1 Preview Logic
             model_id = settings.MODELS['video']
             duration = int(params.get('duration', 4))
             
-            await message.answer(f"🎥 {model_id} начала рендеринг ({duration}s)...")
+            await message.answer(f"🎥 {model_id} начала рендеринг ({duration}s)...", parse_mode=None)
             
             model = genai.GenerativeModel(model_id)
             
@@ -95,8 +93,8 @@ async def handle_web_app_data(message: types.Message):
                     video_data = operation.parts[0].inline_data.data
                     await message.answer_video(video=video_data, caption=f"🎬 {model_id}: Готово")
                 except AttributeError:
-                     await message.answer(f"Результат: {operation.text}")
+                     await message.answer(f"Результат: {operation.text}", parse_mode=None)
 
     except Exception as e:
         logger.error(f"Error handling WebApp data: {e}")
-        await message.answer(f"❌ Ошибка генерации: {str(e)}")
+        await message.answer(f"❌ Ошибка генерации: {str(e)}", parse_mode=None)

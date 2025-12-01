@@ -81,11 +81,15 @@ async def chat_handler(message: types.Message) -> None:
                 session.add(transaction)
                 await session.commit()
                 
-                await wait_message.edit_text(response, parse_mode=ParseMode.MARKDOWN)
+                try:
+                    await wait_message.edit_text(response, parse_mode=ParseMode.MARKDOWN)
+                except Exception:
+                    # Fallback if Markdown parsing fails
+                    await wait_message.edit_text(response, parse_mode=None)
             else:
                 await wait_message.edit_text("Sorry, I couldn't generate a response.")
         except Exception as e:
-            await wait_message.edit_text(f"An error occurred: {str(e)}")
+            await wait_message.edit_text(f"An error occurred: {str(e)}", parse_mode=None)
 
 @router.message(lambda message: message.photo)
 async def photo_handler(message: types.Message) -> None:

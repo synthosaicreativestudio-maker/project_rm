@@ -151,6 +151,7 @@ function App() {
         }
 
         tg.sendData(JSON.stringify(data))
+        tg.close()
     }
 
     const sendTextMessage = () => {
