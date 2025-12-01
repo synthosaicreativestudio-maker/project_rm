@@ -7,7 +7,7 @@ import { Image as ImageIcon, Video, Sparkles, Upload, X, User, ChevronDown } fro
 interface Field {
     id: string
     label: string
-    type: 'text' | 'select' | 'select-or-type'
+    type: 'text' | 'select' | 'select-or-type' | 'multi-select'
     placeholder?: string
     options?: string[]
 }
@@ -29,7 +29,7 @@ function App() {
 
     // Dynamic State
     const [config, setConfig] = useState<Config | null>(null)
-    const [formData, setFormData] = useState<Record<string, string>>({})
+    const [formData, setFormData] = useState<Record<string, string | string[]>>({})
 
     // Video State (kept separate as it's not fully dynamic in this spec yet, or is it?)
     // The spec focuses on Image Gen. Video Gen seems to be separate.
@@ -92,7 +92,7 @@ function App() {
                             id: "filters_block",
                             title: "4. Фильтры (Filters)",
                             fields: [
-                                { id: "negative_prompt", label: "Негативный промпт", type: "select-or-type", placeholder: "Чего НЕ надо?", options: ["Стандартный фильтр (Убрать уродства, мусор, артефакты)", "Без текста (Убрать водяные знаки, подписи, логотипы)", "Только HD (Убрать размытие, шум, низкое качество)", "Анатомический фильтр (Исправить пальцы, лишние конечности — для людей)", "Композиционный (Без обрезки головы, объект в центре)", "Без людей (Только пейзаж/фон)", "Без 3D/Мультяшности (Только фотореализм)"] }
+                                { id: "negative_prompt", label: "Негативный промпт", type: "multi-select", placeholder: "Чего НЕ надо?", options: ["Стандартный фильтр (Убрать уродства, мусор, артефакты)", "Без текста (Убрать водяные знаки, подписи, логотипы)", "Только HD (Убрать размытие, шум, низкое качество)", "Анатомический фильтр (Исправить пальцы, лишние конечности — для людей)", "Композиционный (Без обрезки головы, объект в центре)", "Без людей (Только пейзаж/фон)", "Без 3D/Мультяшности (Только фотореализм)"] }
                             ]
                         }
                     ]
@@ -111,8 +111,21 @@ function App() {
             })
     }, [])
 
-    const handleInputChange = (id: string, value: string) => {
+    const handleInputChange = (id: string, value: string | string[]) => {
         setFormData(prev => ({ ...prev, [id]: value }))
+    }
+
+    const handleMultiSelectToggle = (id: string, option: string) => {
+        setFormData(prev => {
+            const current = prev[id]
+            const currentArray = Array.isArray(current) ? current : []
+
+            if (currentArray.includes(option)) {
+                return { ...prev, [id]: currentArray.filter(item => item !== option) }
+            } else {
+                return { ...prev, [id]: [...currentArray, option] }
+            }
+        })
     }
 
     const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,7 +138,7 @@ function App() {
         // For image, we might need to construct a prompt from formData first
         // But for now, let's just support video prompt enhancement or basic image subject
         const currentPrompt = type === 'image' ? formData['subject'] : videoPrompt
-        if (!currentPrompt?.trim()) return
+        if (!currentPrompt || (typeof currentPrompt === 'string' && !currentPrompt.trim())) return
 
         setIsLoading(true)
         try {
@@ -155,7 +168,7 @@ function App() {
 
         let prompt = ''
         if (type === 'image') {
-            if (!formData['subject']?.trim()) {
+            if (!formData['subject'] || (typeof formData['subject'] === 'string' && !formData['subject'].trim())) {
                 tg.showAlert("Пожалуйста, заполните Субъект")
                 return
             }
@@ -166,25 +179,37 @@ function App() {
             let finalPrompt = ""
             const d = formData
 
+            // Helper to get string value
+            const getVal = (key: string) => {
+                const val = d[key]
+                if (Array.isArray(val)) return val.join(', ')
+                return val
+            }
+
             // 1. Base
-            if (d.subject) finalPrompt += d.subject
-            if (d.action) finalPrompt += ", " + d.action
-            if (d.environment) finalPrompt += ", in " + d.environment
+            if (d.subject) finalPrompt += getVal('subject')
+            if (d.action) finalPrompt += ", " + getVal('action')
+            if (d.environment) finalPrompt += ", in " + getVal('environment')
 
             // 2. Visuals
-            if (d.style) finalPrompt += ", " + d.style + " style"
-            if (d.materials) finalPrompt += ", made of " + d.materials
-            if (d.lighting) finalPrompt += ", " + d.lighting
-            if (d.colors) finalPrompt += ", " + d.colors + " color palette"
+            if (d.style) finalPrompt += ", " + getVal('style') + " style"
+            if (d.materials) finalPrompt += ", made of " + getVal('materials')
+            if (d.lighting) finalPrompt += ", " + getVal('lighting')
+            if (d.colors) finalPrompt += ", " + getVal('colors') + " color palette"
 
             // 3. Camera
-            if (d.camera_angle) finalPrompt += ", shot from " + d.camera_angle
-            if (d.shot_size) finalPrompt += ", " + d.shot_size
-            if (d.focus) finalPrompt += ", " + d.focus
+            if (d.camera_angle) finalPrompt += ", shot from " + getVal('camera_angle')
+            if (d.shot_size) finalPrompt += ", " + getVal('shot_size')
+            if (d.focus) finalPrompt += ", " + getVal('focus')
 
             // 4. Extra
-            if (d.textOnPhoto) finalPrompt += `, Text: "${d.textOnPhoto}"`
-            if (d.negative_prompt) finalPrompt += ` --no ${d.negative_prompt}`
+            if (d.textOnPhoto) finalPrompt += `, Text: "${getVal('textOnPhoto')}"`
+
+            // Negative Prompt (Multi-select)
+            if (d.negative_prompt) {
+                const neg = Array.isArray(d.negative_prompt) ? d.negative_prompt.join(', ') : d.negative_prompt
+                if (neg) finalPrompt += ` --no ${neg}`
+            }
 
             const resolution = d.resolution || '1K'
             finalPrompt += `, high quality, ${resolution}`
@@ -245,13 +270,39 @@ function App() {
     const renderField = (field: Field) => {
         const value = formData[field.id] || ''
 
+        if (field.type === 'multi-select') {
+            const selected = Array.isArray(value) ? value : []
+            return (
+                <div key={field.id}>
+                    <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">{field.label}</label>
+                    <div className="flex flex-wrap gap-2">
+                        {field.options?.map(opt => {
+                            const isSelected = selected.includes(opt)
+                            return (
+                                <button
+                                    key={opt}
+                                    onClick={() => handleMultiSelectToggle(field.id, opt)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${isSelected
+                                        ? 'bg-neon-purple text-white border-neon-purple shadow-[0_0_10px_rgba(188,19,254,0.4)]'
+                                        : 'bg-black/30 text-gray-400 border-white/10 hover:border-white/30 hover:text-white'
+                                        }`}
+                                >
+                                    {opt}
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+            )
+        }
+
         if (field.type === 'select') {
             return (
                 <div key={field.id}>
                     <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">{field.label}</label>
                     <div className="relative">
                         <select
-                            value={value}
+                            value={value as string}
                             onChange={(e) => handleInputChange(field.id, e.target.value)}
                             className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50 appearance-none"
                         >
@@ -273,7 +324,7 @@ function App() {
                     <div className="relative group">
                         <input
                             type="text"
-                            value={value}
+                            value={value as string}
                             onChange={(e) => handleInputChange(field.id, e.target.value)}
                             placeholder={field.placeholder}
                             list={`list-${field.id}`}
@@ -296,7 +347,7 @@ function App() {
                 <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">{field.label}</label>
                 <input
                     type="text"
-                    value={value}
+                    value={value as string}
                     onChange={(e) => handleInputChange(field.id, e.target.value)}
                     placeholder={field.placeholder}
                     className="w-full glass-input rounded-xl px-4 py-2 text-sm"

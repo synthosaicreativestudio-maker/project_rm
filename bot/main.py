@@ -63,7 +63,12 @@ async def main():
         await site.start()
         logger.info("API Server started on http://localhost:8000")
 
-        await dp.start_polling(bot)
+    # Remove menu button (commands)
+    await bot.delete_my_commands()
+
+    # Start polling
+    logger.info("Start polling")
+    await dp.start_polling(bot)
     except Exception as e:
         logger.error(f"Error starting bot: {e}")
     finally:

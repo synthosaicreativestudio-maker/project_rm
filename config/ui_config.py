@@ -163,7 +163,7 @@ UI_CONFIG = {
                 {
                     "id": "negative_prompt",
                     "label": "Негативный промпт",
-                    "type": "select-or-type",
+                    "type": "multi-select",
                     "placeholder": "Чего НЕ надо?",
                     "options": [
                         "Стандартный фильтр (Убрать уродства, мусор, артефакты)",
