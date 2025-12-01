@@ -17,11 +17,11 @@ class Settings(BaseSettings):
     
     WEBAPP_URL: Optional[str] = None
 
-    # Model IDs (Strictly from TZ)
+    # Model IDs (Final Configuration)
     MODELS: dict = {
-        "text": "gemini-3.0-pro",
-        "video": "veo-3.1-preview",
-        "image": "nanabanana-pro"
+        "text": "gemini-3-pro-preview",
+        "video": "veo-3.1-fast-generate-preview", 
+        "image": "nano-banana-pro-preview"
     }
 
     @property
