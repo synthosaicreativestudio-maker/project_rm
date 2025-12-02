@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 class VeoService:
     def __init__(self):
-        self.project_id = "marketing-469506" # TODO: Move to settings
-        self.location = "us-central1"
-        self.key_file = "marketing-469506-95611014aab8.json"
+        self.project_id = settings.VERTEX_PROJECT_ID
+        self.location = settings.VERTEX_LOCATION
+        self.key_file = settings.VERTEX_CREDENTIALS_PATH
         
         self._setup_credentials()
         self._init_vertexai()

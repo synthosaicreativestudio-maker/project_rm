@@ -17,11 +17,16 @@ class Settings(BaseSettings):
     
     WEBAPP_URL: Optional[str] = None
 
-    # Model IDs (Final Configuration)
-    MODELS: dict = {
+    # Vertex AI
+    VERTEX_PROJECT_ID: str = "marketing-469506"
+    VERTEX_LOCATION: str = "us-central1"
+    VERTEX_CREDENTIALS_PATH: str = "marketing-469506-95611014aab8.json"
+
+    # Models
+    MODELS: Dict[str, str] = {
         "text": "gemini-2.5-flash-lite",
-        "video": "veo-3.1-fast-generate-001", 
-        "image": "gemini-2.5-flash-lite"
+        "image": "imagen-3.0-generate-001",
+        "video": "veo-3.1-fast-generate-001"
     }
 
     @property
