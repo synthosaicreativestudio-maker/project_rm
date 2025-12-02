@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     MODELS: Dict[str, str] = {
         "text": "gemini-3-pro-preview",
         "image": "gemini-3-pro-image-preview",
-        "video": "veo-3.1-fast-generate-preview"
+        "video": "veo-3.1-fast-generate-001"
     }
 
     @property
