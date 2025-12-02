@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional, Dict
 
 class Settings(BaseSettings):
     BOT_TOKEN: str
