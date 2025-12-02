@@ -43,7 +43,7 @@ async def handle_web_app_data(message: types.Message):
 
         elif action_type == 'image':
             # Vertex AI Imagen 3 Logic
-            from services.vertex_image import vertex_image_service
+            from services.gemini import gemini_service
             
             model_id = settings.MODELS['image']
             await message.answer(f"🎨 {model_id} рисует...", parse_mode=None)
@@ -51,8 +51,8 @@ async def handle_web_app_data(message: types.Message):
             # Extract params
             aspect_ratio = params.get('aspectRatio', '1:1')
             
-            # Generate image
-            img_bytes = await vertex_image_service.generate_image(prompt, aspect_ratio=aspect_ratio)
+            # Generate image using Gemini Service (API Key)
+            image_bytes = await gemini_service.generate_image(prompt, aspect_ratio)=aspect_ratio)
             
             if img_bytes:
                 from aiogram.types import BufferedInputFile

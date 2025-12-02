@@ -62,8 +62,35 @@ Do NOT use Markdown (asterisks like **text** or *text*). Use <b>text</b> for bol
             inputs = [prompt] + images
             response: GenerateContentResponse = await self.vision_model.generate_content_async(inputs)
             return response.text
+            return None
+
+    async def generate_image(self, prompt: str, aspect_ratio: str = "1:1") -> Optional[bytes]:
+        """
+        Generates an image using Gemini 3 Pro Image Preview.
+        Returns the image bytes.
+        """
+        try:
+            # Initialize the image model on demand or in __init__
+            # Using the model ID from settings or hardcoded as per user request if not in settings
+            model_name = settings.MODELS.get("image", "gemini-3-pro-image-preview")
+            image_model = genai.GenerativeModel(model_name)
+            
+            logger.info(f"Generating image with {model_name} for prompt: {prompt}")
+            
+            # Note: The prompt for image generation might need specific handling if the model expects it.
+            # For Gemini 3 Image, it seems generate_content with text prompt works.
+            response = await image_model.generate_content_async(prompt)
+            
+            if response.parts:
+                for part in response.parts:
+                    if part.inline_data:
+                        return part.inline_data.data
+            
+            logger.warning("No image data found in response.")
+            return None
+            
         except Exception as e:
-            logger.error(f"Error generating multimodal content: {e}")
+            logger.error(f"Error generating image with Gemini: {e}")
             return None
 
 gemini_service = GeminiService()
