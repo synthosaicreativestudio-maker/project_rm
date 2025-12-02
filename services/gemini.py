@@ -35,6 +35,10 @@ Your primary goal is to help users utilize the "Project_RM" Telegram Bot to crea
 
 **TONE:**
 Professional, enthusiastic, and helpful. Speak in Russian unless asked otherwise.
+
+**FORMATTING:**
+Format your response using **HTML tags** supported by Telegram: <b>bold</b>, <i>italic</i>, <code>code</code>, <pre>pre</pre>, <a href='...'>link</a>.
+Do NOT use Markdown (asterisks like **text** or *text*). Use <b>text</b> for bold.
 """
         self.model = genai.GenerativeModel(settings.MODELS['text'], system_instruction=system_instruction) 
         self.vision_model = genai.GenerativeModel(settings.MODELS['text'], system_instruction=system_instruction)

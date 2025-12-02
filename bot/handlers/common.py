@@ -20,7 +20,7 @@ async def command_start_handler(message: types.Message) -> None:
     full_name = message.from_user.full_name
 
     # Use configured WEBAPP_URL or a placeholder if not set
-    webapp_url = settings.WEBAPP_URL or "https://google.com" 
+    webapp_url = settings.WEBAPP_URL or "https://synthosaicreativestudio-maker.github.io/project_rm/" 
 
     from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
@@ -70,9 +70,9 @@ async def chat_handler(message: types.Message) -> None:
         response = await gemini_service.generate_text(message.text)
         if response:
             try:
-                await wait_message.edit_text(response, parse_mode=ParseMode.MARKDOWN)
+                await wait_message.edit_text(response, parse_mode=ParseMode.HTML)
             except Exception:
-                # Fallback if Markdown parsing fails
+                # Fallback if HTML parsing fails
                 await wait_message.edit_text(response, parse_mode=None)
         else:
             await wait_message.edit_text("Извините, не удалось сгенерировать ответ.")
@@ -107,7 +107,7 @@ async def photo_handler(message: types.Message) -> None:
         response = await gemini_service.generate_multimodal(message.caption, [image])
         
         if response:
-            await wait_message.edit_text(response, parse_mode=ParseMode.MARKDOWN)
+            await wait_message.edit_text(response, parse_mode=ParseMode.HTML)
         else:
             await wait_message.edit_text("Sorry, I couldn't generate a response.")
     except Exception as e:
