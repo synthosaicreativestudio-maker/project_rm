@@ -225,26 +225,42 @@ function App() {
             }
         }
 
-        try {
-            const data = {
-                type: type,
-                prompt: prompt,
-                params: type === 'image' ? { aspectRatio: formData['aspectRatio'] || '1:1', resolution: formData['resolution'] || '1K' } : { orientation: videoOrientation }
-            }
+        // New Logic: HTTP POST to /api/generate
+        const userId = tg.initDataUnsafe?.user?.id
 
-            tg.sendData(JSON.stringify(data))
-
-            setTimeout(() => {
-                try {
-                    tg.close()
-                } catch (e) {
-                    // ignore
-                }
-            }, 1000)
-
-        } catch (e) {
-            tg.showAlert(`Error: ${e}`)
+        if (!userId) {
+            tg.showAlert("Ошибка: Не удалось определить User ID. Запустите через Telegram.")
+            return
         }
+
+        setIsLoading(true)
+
+        const payload = {
+            user_id: userId,
+            type: type,
+            prompt: prompt,
+            params: type === 'image' ? { aspectRatio: formData['aspectRatio'] || '1:1', resolution: formData['resolution'] || '1K' } : { orientation: videoOrientation }
+        }
+
+        fetch('http://localhost:8000/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    tg.close()
+                } else {
+                    tg.showAlert(`Ошибка сервера: ${data.message}`)
+                }
+            })
+            .catch(err => {
+                tg.showAlert(`Ошибка сети: ${err}`)
+            })
+            .finally(() => {
+                setIsLoading(false)
+            })
     }
 
     // Chat function removed

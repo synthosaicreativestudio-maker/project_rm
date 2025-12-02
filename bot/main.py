@@ -60,7 +60,7 @@ async def main():
         from bot.handlers.webapp_api import setup_web_routes
         
         app = web.Application()
-        setup_web_routes(app)
+        setup_web_routes(app, bot)
         
         runner = web.AppRunner(app)
         await runner.setup()
