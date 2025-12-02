@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Image as ImageIcon, Video, Sparkles, Upload, X, User, ChevronDown } from 'lucide-react'
+import { Image as ImageIcon, Video, Sparkles, Upload, X, ChevronDown } from 'lucide-react'
 
 
 
@@ -176,7 +176,7 @@ function App() {
             // Assemble structured prompt based on Dynamic Logic
             // Logic: Subject, Action, in Environment, Style style, made of Material, Lighting, Colors color palette, shot from Angle, Shot size, Focus, Text: "...", --no Negative
 
-            let finalPrompt = ""
+            const parts: string[] = []
             const d = formData
 
             // Helper to get string value
@@ -187,33 +187,35 @@ function App() {
             }
 
             // 1. Base
-            if (d.subject) finalPrompt += getVal('subject')
-            if (d.action) finalPrompt += ", " + getVal('action')
-            if (d.environment) finalPrompt += ", in " + getVal('environment')
+            if (d.subject) parts.push(getVal('subject') as string)
+            if (d.action) parts.push(getVal('action') as string)
+            if (d.environment) parts.push("in " + getVal('environment'))
 
             // 2. Visuals
-            if (d.style) finalPrompt += ", " + getVal('style') + " style"
-            if (d.materials) finalPrompt += ", made of " + getVal('materials')
-            if (d.lighting) finalPrompt += ", " + getVal('lighting')
-            if (d.colors) finalPrompt += ", " + getVal('colors') + " color palette"
+            if (d.style) parts.push(getVal('style') + " style")
+            if (d.materials) parts.push("made of " + getVal('materials'))
+            if (d.lighting) parts.push(getVal('lighting') as string)
+            if (d.colors) parts.push(getVal('colors') + " color palette")
 
             // 3. Camera
-            if (d.camera_angle) finalPrompt += ", shot from " + getVal('camera_angle')
-            if (d.shot_size) finalPrompt += ", " + getVal('shot_size')
-            if (d.focus) finalPrompt += ", " + getVal('focus')
+            if (d.camera_angle) parts.push("shot from " + getVal('camera_angle'))
+            if (d.shot_size) parts.push(getVal('shot_size') as string)
+            if (d.focus) parts.push(getVal('focus') as string)
 
             // 4. Extra
-            if (d.textOnPhoto) finalPrompt += `, Text: "${getVal('textOnPhoto')}"`
+            if (d.textOnPhoto) parts.push(`Text: "${getVal('textOnPhoto')}"`)
+
+            let mainPrompt = parts.join(', ')
 
             // Negative Prompt (Multi-select)
             if (d.negative_prompt) {
                 const neg = Array.isArray(d.negative_prompt) ? d.negative_prompt.join(', ') : d.negative_prompt
-                if (neg) finalPrompt += ` --no ${neg}`
+                if (neg) mainPrompt += ` --no ${neg}`
             }
 
             const resolution = d.resolution || '1K'
-            finalPrompt += `, high quality, ${resolution}`
-            prompt = finalPrompt
+            mainPrompt += `, high quality, ${resolution}`
+            prompt = mainPrompt
 
         } else {
             prompt = videoPrompt
@@ -564,54 +566,7 @@ function App() {
                         </div>
                     )}
 
-                    {activeTab === 'profile' && (
-                        <div className="flex flex-col h-full p-4 overflow-y-auto">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-3 rounded-xl bg-green-500/10 text-green-400">
-                                    <User size={24} />
-                                </div>
-                                <h2 className="text-2xl font-bold">Профиль</h2>
-                            </div>
 
-                            <div className="glass-panel p-4 rounded-xl mb-6 bg-gradient-to-br from-white/5 to-transparent">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-gray-400 text-sm">Текущий план</span>
-                                    <span className="text-green-400 font-bold bg-green-500/10 px-3 py-1 rounded-full text-xs border border-green-500/20">FREE</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-gray-400 text-sm">Кредиты</span>
-                                    <span className="text-xl font-bold">50 / 100</span>
-                                </div>
-                                <div className="w-full bg-white/10 h-1.5 rounded-full mt-3 overflow-hidden">
-                                    <div className="bg-green-400 h-full w-1/2 shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
-                                </div>
-                            </div>
-
-                            <h3 className="font-bold mb-4 text-lg">Выберите Тариф</h3>
-                            <div className="space-y-3">
-                                {[
-                                    { name: 'Starter', price: '$9/мес', features: ['1000 Кредитов', 'Стандартная скорость', 'Чат & Фото'] },
-                                    { name: 'Pro', price: '$29/мес', features: ['5000 Кредитов', 'Быстрая генерация', 'Видео доступ'], popular: true },
-                                    { name: 'Unlimited', price: '$99/мес', features: ['Безлимит', 'Приоритет', 'Все модели'] }
-                                ].map((plan) => (
-                                    <div key={plan.name} className={`glass-panel p-4 rounded-xl border transition-all hover:scale-[1.02] cursor-pointer ${plan.popular ? 'border-neon-purple/50 bg-neon-purple/5' : 'border-white/5 hover:border-white/20'}`}>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <h4 className="font-bold text-lg">{plan.name}</h4>
-                                            <span className="font-mono text-neon-blue">{plan.price}</span>
-                                        </div>
-                                        <div className="space-y-1">
-                                            {plan.features.map((f, i) => (
-                                                <div key={i} className="flex items-center gap-2 text-xs text-gray-400">
-                                                    <div className="w-1 h-1 rounded-full bg-white/50"></div>
-                                                    {f}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </motion.div>
             </main>
 
@@ -620,8 +575,7 @@ function App() {
                 {[
                     // { id: 'chat', icon: MessageSquare, label: 'Чат' }, // Removed
                     { id: 'image', icon: ImageIcon, label: 'Фото' },
-                    { id: 'video', icon: Video, label: 'Видео' },
-                    { id: 'profile', icon: User, label: 'Профиль' }
+                    { id: 'video', icon: Video, label: 'Видео' }
                 ].map((item) => (
                     <button
                         key={item.id}

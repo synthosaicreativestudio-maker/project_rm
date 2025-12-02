@@ -19,9 +19,9 @@ class Settings(BaseSettings):
 
     # Model IDs (Final Configuration)
     MODELS: dict = {
-        "text": "gemini-3-pro-preview",
+        "text": "gemini-2.5-flash-lite",
         "video": "veo-3.1-fast-generate-001", 
-        "image": "gemini-3-pro-image-preview"
+        "image": "gemini-2.5-flash-lite"
     }
 
     @property

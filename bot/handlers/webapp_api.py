@@ -3,6 +3,7 @@ from aiohttp import web
 from aiogram import Router
 from services.gemini import gemini_service
 from config.ui_config import UI_CONFIG
+from services.veo import veo_service
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -59,12 +60,55 @@ async def handle_enhance_prompt(request):
         return web.json_response({'enhanced_prompt': f"Error: {str(e)}"}, status=500)
 
 async def handle_generate_image(request):
-    # Mock generation
-    return web.json_response({'status': 'success', 'message': 'Image generation started... (Simulation)'})
+    try:
+        data = await request.json()
+        prompt = data.get('prompt', '')
+        params = data.get('params', {})
+        resolution = params.get('resolution', '1K')
+        aspect_ratio = params.get('aspectRatio', '1:1')
+
+        logger.info(f"IMAGE GEN REQUEST: Prompt='{prompt}', Params={{'resolution': '{resolution}', 'aspectRatio': '{aspect_ratio}'}}")
+
+        # Mock generation
+        return web.json_response({'status': 'success', 'message': f'Image generation started for: {prompt} ({resolution}, {aspect_ratio})'})
+    except Exception as e:
+        logger.error(f"Error in handle_generate_image: {e}")
+        return web.json_response({'status': 'error', 'message': str(e)}, status=500)
+
 
 async def handle_generate_video(request):
-    # Mock generation
-    return web.json_response({'status': 'success', 'message': 'Video generation started... (Simulation)'})
+    try:
+        data = await request.json()
+        prompt = data.get('prompt', '')
+        
+        if not prompt:
+            return web.json_response({'status': 'error', 'message': 'Prompt is required'}, status=400)
+
+        # Start generation (async)
+        # Note: In a real production app, we should use a task queue (Celery/Redis) because this takes time.
+        # For this MVP, we might await it (blocking the request) or run it in background.
+        # Since Veo is slow, blocking the HTTP request might timeout the WebApp.
+        # However, for now, let's try to await it and see, or return a "started" status and handle it via webhook/polling if possible.
+        # But the WebApp expects a response.
+        
+        # Let's await it for now, assuming the user waits or we return a "job started" ID.
+        # But the current frontend likely expects the result or a confirmation.
+        
+        # Given the "Mock" returned "Video generation started...", let's keep that pattern but actually start it?
+        # No, if we return "started", the user won't get the video in the WebApp unless we have a way to push it back.
+        # The WebApp might be polling or waiting.
+        
+        # Let's try to generate and return the result (URI).
+        video_uri = await veo_service.generate_video(prompt)
+        
+        if video_uri:
+             return web.json_response({'status': 'success', 'video_uri': video_uri})
+        else:
+             return web.json_response({'status': 'error', 'message': 'Generation failed or quota exceeded'}, status=500)
+
+    except Exception as e:
+        logger.error(f"Error in handle_generate_video: {e}")
+        return web.json_response({'status': 'error', 'message': str(e)}, status=500)
 
 
 

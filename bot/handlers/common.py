@@ -5,7 +5,7 @@ from aiogram.utils.markdown import hbold
 from aiogram.types import WebAppInfo
 from sqlalchemy import select
 from database.db import get_db
-from database.models import User, Transaction
+from database.models import User
 from config.settings import settings
 
 router = Router()
@@ -36,9 +36,6 @@ async def command_start_handler(message: types.Message) -> None:
         if not user:
             user = User(id=user_id, username=username, full_name=full_name)
             session.add(user)
-            # Add initial transaction
-            transaction = Transaction(user_id=user_id, amount=10, description="Welcome Bonus")
-            session.add(transaction)
             await session.commit()
             await message.answer(
                 f"Привет, {hbold(full_name)}! 👋\n\n"
@@ -52,7 +49,7 @@ async def command_start_handler(message: types.Message) -> None:
             )
         else:
             await message.answer(
-                f"С возвращением, {hbold(full_name)}! 👋\nБаланс: {user.balance} кредитов (MVP: Безлимит).",
+                f"С возвращением, {hbold(full_name)}! 👋\nРад тебя видеть снова!",
                 reply_markup=kb
             )
 
@@ -63,37 +60,24 @@ async def chat_handler(message: types.Message) -> None:
     """
     from services.gemini import gemini_service
     
-    user_id = message.from_user.id
+    # user_id = message.from_user.id
     
-    async for session in get_db():
-        result = await session.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
-        
-        # MVP: Credits disabled
-        # if not user or user.balance <= 0:
-        #     await message.answer("Insufficient funds. Please top up your balance.")
-        #     return
-
-        wait_message = await message.answer("Думаю...")
-        
-        try:
-            response = await gemini_service.generate_text(message.text)
-            if response:
-                # Deduct credit (Disabled for MVP)
-                # user.balance -= 1
-                # transaction = Transaction(user_id=user_id, amount=-1, description="Text Generation")
-                # session.add(transaction)
-                # await session.commit()
-                
-                try:
-                    await wait_message.edit_text(response, parse_mode=ParseMode.MARKDOWN)
-                except Exception:
-                    # Fallback if Markdown parsing fails
-                    await wait_message.edit_text(response, parse_mode=None)
-            else:
-                await wait_message.edit_text("Извините, не удалось сгенерировать ответ.")
-        except Exception as e:
-            await wait_message.edit_text(f"Произошла ошибка: {str(e)}", parse_mode=None)
+    # user_id = message.from_user.id
+    
+    wait_message = await message.answer("Думаю...")
+    
+    try:
+        response = await gemini_service.generate_text(message.text)
+        if response:
+            try:
+                await wait_message.edit_text(response, parse_mode=ParseMode.MARKDOWN)
+            except Exception:
+                # Fallback if Markdown parsing fails
+                await wait_message.edit_text(response, parse_mode=None)
+        else:
+            await wait_message.edit_text("Извините, не удалось сгенерировать ответ.")
+    except Exception as e:
+        await wait_message.edit_text(f"Произошла ошибка: {str(e)}", parse_mode=None)
 
 @router.message(lambda message: message.photo)
 async def photo_handler(message: types.Message) -> None:
@@ -107,39 +91,24 @@ async def photo_handler(message: types.Message) -> None:
         await message.answer("Пожалуйста, добавьте описание к фото.")
         return
 
-    user_id = message.from_user.id
 
-    async for session in get_db():
-        result = await session.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
+
+    wait_message = await message.answer("Analyzing image...")
+
+    try:
+        # Download the largest photo
+        photo = message.photo[-1]
+        bot = message.bot
+        file = await bot.get_file(photo.file_id)
+        file_content = await bot.download_file(file.file_path)
         
-        # MVP: Credits disabled
-        # if not user or user.balance <= 0:
-        #     await message.answer("Insufficient funds. Please top up your balance.")
-        #     return
-
-        wait_message = await message.answer("Analyzing image...")
-
-        try:
-            # Download the largest photo
-            photo = message.photo[-1]
-            bot = message.bot
-            file = await bot.get_file(photo.file_id)
-            file_content = await bot.download_file(file.file_path)
-            
-            image = Image.open(file_content)
-            
-            response = await gemini_service.generate_multimodal(message.caption, [image])
-            
-            if response:
-                # Deduct credit
-                user.balance -= 1
-                transaction = Transaction(user_id=user_id, amount=-1, description="Image Analysis")
-                session.add(transaction)
-                await session.commit()
-
-                await wait_message.edit_text(response, parse_mode=ParseMode.MARKDOWN)
-            else:
-                await wait_message.edit_text("Sorry, I couldn't generate a response.")
-        except Exception as e:
-            await wait_message.edit_text(f"An error occurred: {str(e)}")
+        image = Image.open(file_content)
+        
+        response = await gemini_service.generate_multimodal(message.caption, [image])
+        
+        if response:
+            await wait_message.edit_text(response, parse_mode=ParseMode.MARKDOWN)
+        else:
+            await wait_message.edit_text("Sorry, I couldn't generate a response.")
+    except Exception as e:
+        await wait_message.edit_text(f"An error occurred: {str(e)}")

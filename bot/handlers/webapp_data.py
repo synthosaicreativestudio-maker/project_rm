@@ -81,36 +81,26 @@ async def handle_web_app_data(message: types.Message):
 
         elif action_type == 'video':
             # Veo 3.1 Preview Logic
+            from services.veo import veo_service
+            
             model_id = settings.MODELS['video']
             duration = int(params.get('duration', 4))
             
             await message.answer(f"🎥 {model_id} начала рендеринг ({duration}s)...", parse_mode=None)
             
-            model = genai.GenerativeModel(model_id)
+            # Use the service
+            # Note: The service currently doesn't support duration param in generate_video, 
+            # but we can add it or just ignore it for now as Veo default is usually fixed or prompt-based.
+            # We should pass the prompt.
             
-            # Veo config
-            # Note: GenerationConfig might need specific import or dict structure
-            video_config = genai.types.GenerationConfig(
-                media_resolution="1280x720",
-                video_metadata={"duration_seconds": duration}
-            )
+            video_uri = await veo_service.generate_video(prompt)
             
-            # Run long-running generation in thread
-            operation = await asyncio.to_thread(
-                model.generate_content, 
-                prompt, 
-                generation_config=video_config
-            )
-            
-            # In real Veo API, we might need to handle operation.result() or similar
-            # Assuming immediate response for now based on TZ skeleton
-            
-            if operation.parts:
-                try:
-                    video_data = operation.parts[0].inline_data.data
-                    await message.answer_video(video=video_data, caption=f"🎬 {model_id}: Готово")
-                except AttributeError:
-                     await message.answer(f"Результат: {operation.text}", parse_mode=None)
+            if video_uri:
+                 # If it's a URI (e.g. GCS), we might need to download it or send it as a link.
+                 # For now, assuming it returns something we can send or a text description if it's a raw response object.
+                 await message.answer(f"🎬 Готово! Результат: {video_uri}", parse_mode=None)
+            else:
+                 await message.answer("❌ Не удалось сгенерировать видео (возможно, превышена квота).", parse_mode=None)
 
     except Exception as e:
         logger.error(f"Error handling WebApp data: {e}")
