@@ -77,11 +77,11 @@ Do NOT use Markdown (asterisks like **text** or *text*). Use <b>text</b> for bol
             model_name = settings.MODELS.get("image", "gemini-3-pro-image-preview")
             image_model = genai.GenerativeModel(model_name)
             
-            logger.info(f"Generating image with {model_name} for prompt: {prompt}")
+            # Append aspect ratio to prompt for better adherence
+            full_prompt = f"{prompt}, aspect ratio {aspect_ratio}"
+            logger.info(f"Generating image with {model_name} for prompt: {full_prompt}")
             
-            # Note: The prompt for image generation might need specific handling if the model expects it.
-            # For Gemini 3 Image, it seems generate_content with text prompt works.
-            response = await image_model.generate_content_async(prompt)
+            response = await image_model.generate_content_async(full_prompt)
             
             if response.parts:
                 for part in response.parts:

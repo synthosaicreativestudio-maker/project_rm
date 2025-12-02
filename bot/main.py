@@ -46,6 +46,10 @@ async def main():
     # Set Menu Button
         from aiogram.types import MenuButtonWebApp, WebAppInfo
         webapp_url = settings.WEBAPP_URL or "https://synthosaicreativestudio-maker.github.io/project_rm/"
+        
+        # Force update by deleting first
+        await bot.delete_chat_menu_button()
+        
         await bot.set_chat_menu_button(
             menu_button=MenuButtonWebApp(text="Open App", web_app=WebAppInfo(url=webapp_url))
         )
