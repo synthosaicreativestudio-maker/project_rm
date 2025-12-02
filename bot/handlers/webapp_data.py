@@ -52,7 +52,7 @@ async def handle_web_app_data(message: types.Message):
             aspect_ratio = params.get('aspectRatio', '1:1')
             
             # Generate image using Gemini Service (API Key)
-            image_bytes = await gemini_service.generate_image(prompt, aspect_ratio)=aspect_ratio)
+            image_bytes = await gemini_service.generate_image(prompt, aspect_ratio=aspect_ratio)
             
             if img_bytes:
                 from aiogram.types import BufferedInputFile

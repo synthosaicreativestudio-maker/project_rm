@@ -62,6 +62,8 @@ Do NOT use Markdown (asterisks like **text** or *text*). Use <b>text</b> for bol
             inputs = [prompt] + images
             response: GenerateContentResponse = await self.vision_model.generate_content_async(inputs)
             return response.text
+        except Exception as e:
+            logger.error(f"Error generating multimodal content: {e}")
             return None
 
     async def generate_image(self, prompt: str, aspect_ratio: str = "1:1") -> Optional[bytes]:
