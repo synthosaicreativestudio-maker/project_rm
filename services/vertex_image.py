@@ -1,7 +1,7 @@
 import os
 import logging
 import vertexai
-from vertexai.preview.vision import ImageGenerationModel
+from vertexai.vision_models import ImageGenerationModel
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
