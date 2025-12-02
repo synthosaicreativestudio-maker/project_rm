@@ -45,7 +45,7 @@ async def main():
         
     # Set Menu Button
         from aiogram.types import MenuButtonWebApp, WebAppInfo
-        webapp_url = settings.WEBAPP_URL or "https://google.com"
+        webapp_url = settings.WEBAPP_URL or "https://synthosaicreativestudio-maker.github.io/project_rm/"
         await bot.set_chat_menu_button(
             menu_button=MenuButtonWebApp(text="Open App", web_app=WebAppInfo(url=webapp_url))
         )
