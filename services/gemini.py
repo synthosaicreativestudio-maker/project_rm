@@ -66,6 +66,30 @@ Do NOT use Markdown (asterisks like **text** or *text*). Use <b>text</b> for bol
             logger.error(f"Error generating multimodal content: {e}")
             return None
 
+    async def synthesize_reference_prompt(self, main_prompt: str, references: List[dict], images: List[Image.Image]) -> Optional[str]:
+        """
+        Analyzes multiple reference images and their descriptions to create a single master prompt.
+        """
+        try:
+            instruction = f"""
+Analyze these {len(images)} reference images and the user's specific instructions for each:
+{chr(10).join([f"- Photo {ref['id'] + 1}: {ref['description']}" for ref in references if ref.get('url')])}
+
+Overall Goal: {main_prompt}
+
+TASK:
+Generate a single, highly detailed Stable Diffusion / Imagen prompt in English. 
+Coherently combine the elements from the references (e.g., character from photo 1, style from photo 2, lighting from photo 3) as specified.
+The resulting prompt should be cinematic, professional, and visually rich.
+Output ONLY the resulting prompt string. No explanations.
+"""
+            inputs = [instruction] + images
+            response: GenerateContentResponse = await self.vision_model.generate_content_async(inputs)
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"Error synthesizing reference prompt: {e}")
+            return None
+
     async def generate_image(self, prompt: str, aspect_ratio: str = "1:1") -> Optional[bytes]:
         """
         Generates an image using Gemini 3 Pro Image Preview.

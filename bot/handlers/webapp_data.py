@@ -47,6 +47,54 @@ async def handle_web_app_data(message: types.Message):
             else:
                 await message.answer("❌ Ошибка: Не удалось сгенерировать изображение.")
 
+        elif action_type == 'reference':
+            from services.gemini import gemini_service
+            import aiohttp
+            import io
+            from PIL import Image
+            
+            main_prompt = data.get('mainPrompt', '')
+            references = data.get('references', [])
+            
+            await message.answer("🔄 Анализирую референсы и создаю мастер-промпт... Пожалуйста, подождите.")
+            
+            images = []
+            async with aiohttp.ClientSession() as session:
+                for ref in references:
+                    if ref.get('url'):
+                        try:
+                            async with session.get(ref['url']) as resp:
+                                if resp.status == 200:
+                                    img_data = await resp.read()
+                                    img = Image.open(io.BytesIO(img_data))
+                                    images.append(img)
+                        except Exception as e:
+                            logger.error(f"Error downloading image {ref['url']}: {e}")
+
+            if not images and not main_prompt:
+                await message.answer("❌ Недостаточно данных для генерации.")
+                return
+
+            # 1. Synthesize Prompt
+            synthesized_prompt = await gemini_service.synthesize_reference_prompt(main_prompt, references, images)
+            
+            if not synthesized_prompt:
+                 await message.answer("❌ Ошибка при анализе референсов.")
+                 return
+
+            await message.answer(f"📝 Сформулирован промпт:\n<i>{synthesized_prompt[:200]}...</i>\n\n🎨 Запускаю генерацию...")
+            
+            # 2. Generate Image
+            aspect_ratio = params.get('aspectRatio', '9:16')
+            image_bytes = await gemini_service.generate_image(synthesized_prompt, aspect_ratio=aspect_ratio)
+            
+            if image_bytes:
+                from aiogram.types import BufferedInputFile
+                photo_file = BufferedInputFile(image_bytes, filename="ref_generated.png")
+                await message.answer_photo(photo=photo_file, caption=f"✨ Готово по референсам!\nСоотношение: {aspect_ratio}")
+            else:
+                await message.answer("❌ Не удалось сгенерировать финальное изображение.")
+
         elif action_type == 'video':
             from services.veo import veo_service
             
