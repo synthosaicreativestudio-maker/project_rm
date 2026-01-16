@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Image as ImageIcon, Video, Sparkles, Upload, X, ChevronDown } from 'lucide-react'
+import { Image as ImageIcon, Video, Sparkles, Upload, X, ChevronDown, Layers } from 'lucide-react'
 
 
 
@@ -23,7 +23,7 @@ interface Config {
 }
 
 function App() {
-    const [activeTab, setActiveTab] = useState('image')
+    const [activeTab, setActiveTab] = useState<'image' | 'video' | 'reference'>('image')
     // const [input, setInput] = useState('') // Removed chat input
     // const [isLoading, setIsLoading] = useState(false) // Removed due to lack of use in simplified version
 
@@ -36,6 +36,11 @@ function App() {
     const [videoPrompt, setVideoPrompt] = useState('')
     const [videoOrientation, setVideoOrientation] = useState('9:16')
     const [videoRef, setVideoRef] = useState<File | null>(null)
+
+    // Reference Tab State
+    const [refFiles, setRefFiles] = useState<(File | null)[]>([null, null, null])
+    const [refPrompts, setRefPrompts] = useState<string[]>(['', '', ''])
+    const [mainRefPrompt, setMainRefPrompt] = useState('')
 
     // Simplified Config for Local UI
     const fallbackConfig: Config = {
@@ -121,57 +126,48 @@ function App() {
         if (tg) tg.showAlert("Эта функция временно отключена для стабильности. Используйте ручной ввод.")
     }
 
-    const handleGenerate = (type: 'image' | 'video') => {
+    const handleGenerate = (type: 'image' | 'video' | 'reference') => {
         const tg = (window as any).Telegram?.WebApp
         if (!tg) {
             alert("Telegram WebApp not found")
             return
         }
 
-        let prompt = ''
+        let payload: any = { type: type }
+
         if (type === 'image') {
             if (!formData['subject'] || (typeof formData['subject'] === 'string' && !formData['subject'].trim())) {
                 tg.showAlert("Пожалуйста, заполните Субъект")
                 return
             }
 
-            // Assemble structured prompt based on Dynamic Logic
-            // Logic: Subject, Action, in Environment, Style style, made of Material, Lighting, Colors color palette, shot from Angle, Shot size, Focus, Text: "...", --no Negative
-
             const parts: string[] = []
             const d = formData
 
-            // Helper to get string value
             const getVal = (key: string) => {
                 const val = d[key]
                 if (Array.isArray(val)) return val.join(', ')
                 return val
             }
 
-            // 1. Base
             if (d.subject) parts.push(getVal('subject') as string)
             if (d.action) parts.push(getVal('action') as string)
             if (d.environment) parts.push("in " + getVal('environment'))
             if (d.time_of_day) parts.push("during " + getVal('time_of_day'))
             if (d.atmosphere) parts.push("in " + getVal('atmosphere') + " setting")
 
-            // 2. Visuals
             if (d.style) parts.push(getVal('style') + " style")
             if (d.materials) parts.push("made of " + getVal('materials'))
             if (d.lighting) parts.push(getVal('lighting') as string)
             if (d.colors) parts.push(getVal('colors') + " color palette")
 
-            // 3. Camera
             if (d.camera_angle) parts.push("shot from " + getVal('camera_angle'))
             if (d.shot_size) parts.push(getVal('shot_size') as string)
             if (d.focus) parts.push(getVal('focus') as string)
-
-            // 4. Extra
             if (d.textOnPhoto) parts.push(`Text: "${getVal('textOnPhoto')}"`)
 
             let mainPrompt = parts.join(', ')
 
-            // Negative Prompt (Multi-select)
             if (d.negative_prompt) {
                 const neg = Array.isArray(d.negative_prompt) ? d.negative_prompt.join(', ') : d.negative_prompt
                 if (neg) mainPrompt += ` --no ${neg}`
@@ -179,21 +175,43 @@ function App() {
 
             const resolution = d.resolution || '1K'
             mainPrompt += `, high quality, ${resolution}`
-            prompt = mainPrompt
 
-        } else {
-            prompt = videoPrompt
-            if (!prompt.trim()) {
+            payload.prompt = mainPrompt
+            payload.params = { aspectRatio: formData['aspectRatio'] || '1:1', resolution: formData['resolution'] || '1K' }
+
+        } else if (type === 'video') {
+            if (!videoPrompt.trim()) {
                 tg.showAlert("Пожалуйста, введите промт")
                 return
             }
-        }
+            payload.prompt = videoPrompt
+            payload.params = { orientation: videoOrientation }
+        } else if (type === 'reference') {
+            const hasAnyImage = refFiles.some(f => f !== null)
+            if (!hasAnyImage && !mainRefPrompt.trim()) {
+                tg.showAlert("Пожалуйста, загрузите хотя бы один референс или введите описание")
+                return
+            }
 
-        // Send data back to Bot via sendData (MANDATORY for Stability)
-        const payload = {
-            type: type,
-            prompt: prompt,
-            params: type === 'image' ? { aspectRatio: formData['aspectRatio'] || '1:1', resolution: formData['resolution'] || '1K' } : { orientation: videoOrientation }
+            payload.mainPrompt = mainRefPrompt
+            payload.references = refFiles.map((file, i) => ({
+                id: i,
+                description: refPrompts[i],
+                hasFile: file !== null
+            }))
+            payload.params = {
+                aspectRatio: formData['aspectRatio'] || '9:16',
+                resolution: formData['resolution'] || '1K',
+                camera: {
+                    angle: formData['camera_angle'] || '',
+                    shot_size: formData['shot_size'] || '',
+                    focus: formData['focus'] || ''
+                }
+            }
+
+            if (hasAnyImage) {
+                tg.showAlert("Готовлю данные... (Фото будут переданы боту)")
+            }
         }
 
         tg.sendData(JSON.stringify(payload))
@@ -517,6 +535,99 @@ function App() {
                             </button>
                         </div>
                     )}
+                    {activeTab === 'reference' && (
+                        <div className="flex flex-col h-full p-4 overflow-y-auto">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-3 rounded-xl bg-neon-purple/10 text-neon-purple">
+                                    <Layers size={214} />
+                                </div>
+                                <h2 className="text-2xl font-bold">Генерация по референсу</h2>
+                            </div>
+
+                            <div className="flex-1 space-y-4 mb-6">
+                                {[0, 1, 2].map(i => (
+                                    <div key={i} className="glass-panel p-3 rounded-2xl border border-white/5">
+                                        <div className="flex gap-3 mb-3">
+                                            <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-white/10 shrink-0">
+                                                {refFiles[i] ? (
+                                                    <>
+                                                        <img src={URL.createObjectURL(refFiles[i]!)} alt={`ref-${i}`} className="w-full h-full object-cover" />
+                                                        <button
+                                                            onClick={() => {
+                                                                const newFiles = [...refFiles]
+                                                                newFiles[i] = null
+                                                                setRefFiles(newFiles)
+                                                            }}
+                                                            className="absolute top-0 right-0 p-1 bg-black/60 text-white rounded-bl-lg"
+                                                        >
+                                                            <X size={12} />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-white/5">
+                                                        <Upload size={18} className="text-gray-500" />
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                if (e.target.files?.[0]) {
+                                                                    const newFiles = [...refFiles]
+                                                                    newFiles[i] = e.target.files[0]
+                                                                    setRefFiles(newFiles)
+                                                                }
+                                                            }}
+                                                        />
+                                                    </label>
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <input
+                                                    type="text"
+                                                    value={refPrompts[i]}
+                                                    onChange={(e) => {
+                                                        const newPrompts = [...refPrompts]
+                                                        newPrompts[i] = e.target.value
+                                                        setRefPrompts(newPrompts)
+                                                    }}
+                                                    placeholder="что из этого фото взять?"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-neon-purple/50 pr-8"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-400 ml-1">Общее описание (необязательно)</label>
+                                    <textarea
+                                        value={mainRefPrompt}
+                                        onChange={(e) => setMainRefPrompt(e.target.value)}
+                                        placeholder="Добавьте финальные пожелания..."
+                                        className="w-full glass-input rounded-xl px-4 py-3 text-sm resize-none min-h-[80px]"
+                                    />
+                                </div>
+
+                                {/* Common Settings Injection */}
+                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                    <h3 className="text-xs font-bold text-neon-purple/80 uppercase tracking-wider">Настройки Камеры</h3>
+                                    <div className="space-y-3">
+                                        {config?.blocks.find(b => b.id === 'camera_block')?.fields.map(field => renderField(field))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => handleGenerate('reference')}
+                                className="glass-button w-full py-4 rounded-xl font-bold text-lg text-neon-purple shadow-[0_0_20px_rgba(188,19,254,0.3)] hover:shadow-[0_0_30px_rgba(188,19,254,0.5)] transition-all mt-auto"
+                            >
+                                <span className="flex items-center justify-center gap-2">
+                                    <Sparkles size={20} />
+                                    Сгенерировать по реферам
+                                </span>
+                            </button>
+                        </div>
+                    )}
 
 
                 </motion.div>
@@ -527,6 +638,7 @@ function App() {
                 {[
                     // { id: 'chat', icon: MessageSquare, label: 'Чат' }, // Removed
                     { id: 'image', icon: ImageIcon, label: 'Фото' },
+                    { id: 'reference', icon: Layers, label: 'Рефы' },
                     { id: 'video', icon: Video, label: 'Видео' }
                 ].map((item) => (
                     <button
