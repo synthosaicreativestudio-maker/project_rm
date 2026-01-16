@@ -126,7 +126,29 @@ function App() {
         if (tg) tg.showAlert("Эта функция временно отключена для стабильности. Используйте ручной ввод.")
     }
 
-    const handleGenerate = (type: 'image' | 'video' | 'reference') => {
+    const uploadToImgBB = async (file: File): Promise<string | null> => {
+        const formData = new FormData()
+        formData.append('image', file)
+        // Public API key for testing
+        const apiKey = '8cd944a956163359f972ead29ca883ee'
+
+        try {
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                method: 'POST',
+                body: formData
+            })
+            const result = await response.json()
+            if (result.success) {
+                return result.data.url
+            }
+            return null
+        } catch (error) {
+            console.error("ImgBB Upload Error:", error)
+            return null
+        }
+    }
+
+    const handleGenerate = async (type: 'image' | 'video' | 'reference') => {
         const tg = (window as any).Telegram?.WebApp
         if (!tg) {
             alert("Telegram WebApp not found")
@@ -193,10 +215,23 @@ function App() {
                 return
             }
 
+            const uploadedUrls: (string | null)[] = [null, null, null]
+            if (hasAnyImage) {
+                tg.showAlert("Загрузка изображений... Пожалуйста, не закрывайте приложение.")
+
+                for (let i = 0; i < refFiles.length; i++) {
+                    if (refFiles[i]) {
+                        const url = await uploadToImgBB(refFiles[i]!)
+                        uploadedUrls[i] = url
+                    }
+                }
+            }
+
             payload.mainPrompt = mainRefPrompt
             payload.references = refFiles.map((file, i) => ({
                 id: i,
                 description: refPrompts[i],
+                url: uploadedUrls[i],
                 hasFile: file !== null
             }))
             payload.params = {
@@ -207,10 +242,6 @@ function App() {
                     shot_size: formData['shot_size'] || '',
                     focus: formData['focus'] || ''
                 }
-            }
-
-            if (hasAnyImage) {
-                tg.showAlert("Готовлю данные... (Фото будут переданы боту)")
             }
         }
 
