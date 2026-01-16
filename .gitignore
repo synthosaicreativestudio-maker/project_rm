@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 venv/
 .env
+gemini_keys.txt
 
 # MacOS
 .DS_Store

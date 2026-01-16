@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config.settings import settings
-from api.routers import chat
+from api.routers import chat, enhance, generate, config
 
 app = FastAPI(
     title="Project_RM API",
@@ -26,6 +26,9 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
+app.include_router(enhance.router, prefix="/api/enhance-prompt", tags=["enhance"])
+app.include_router(generate.router, prefix="/api/generate", tags=["generate"])
+app.include_router(config.router, prefix="/api/config", tags=["config"])
 
 @app.get("/health")
 async def health_check():

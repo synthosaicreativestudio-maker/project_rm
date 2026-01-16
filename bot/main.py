@@ -55,18 +55,8 @@ async def main():
             menu_button=MenuButtonWebApp(text="Open App", web_app=WebAppInfo(url=webapp_url))
         )
         
-        # Start API Server
-        from aiohttp import web
-        from bot.handlers.webapp_api import setup_web_routes
-        
-        app = web.Application()
-        setup_web_routes(app, bot)
-        
-        runner = web.AppRunner(app)
-        await runner.setup()
-        site = web.TCPSite(runner, 'localhost', 8000)
-        await site.start()
-        logger.info("API Server started on http://localhost:8000")
+        # API Server is now standalone (FastAPI) running on port 8000
+        # See api/main.py
 
     # Remove menu button (commands)
         await bot.delete_my_commands()
