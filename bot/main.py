@@ -41,18 +41,11 @@ async def main():
     await init_db()
 
     try:
+        # Drops pending updates and ensures the bot starts fresh
         await bot.delete_webhook(drop_pending_updates=True)
         
-        # Set Menu Button (Points to GitHub Pages)
-        from aiogram.types import MenuButtonWebApp, WebAppInfo
-        webapp_url = settings.WEBAPP_URL or "https://synthosaicreativestudio-maker.github.io/project_rm/"
-        
-        await bot.set_chat_menu_button(
-            menu_button=MenuButtonWebApp(text="Студия", web_app=WebAppInfo(url=webapp_url))
-        )
-        
         # Note: We are using sendData which requires the ReplyKeyboardMarkup from common.py
-        # The Menu Button above is a quick-access shortcut for viewing.
+        # This is the primary and only interactive entry point for the Mini App.
 
     # Start polling
         logger.info("Start polling")
