@@ -22,7 +22,7 @@ async def command_start_handler(message: types.Message) -> None:
     # Use configured WEBAPP_URL or GitHub Pages as base
     webapp_url = settings.WEBAPP_URL or "https://synthosaicreativestudio-maker.github.io/project_rm/" 
 
-    from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
+    from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
     # ReplyKeyboardMarkup is REQUIRED for tg.sendData() to work
     kb = ReplyKeyboardMarkup(keyboard=[

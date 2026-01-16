@@ -1,5 +1,4 @@
 import json
-import asyncio
 import logging
 from aiogram import Router, F, types
 import google.generativeai as genai
@@ -26,8 +25,9 @@ async def handle_web_app_data(message: types.Message):
         prompt = data.get('prompt')
         params = data.get('params', {})
 
-        print(f"DEBUG REBOOT: Processing WebApp data: {action_type} | {prompt[:50]}...")
-        logger.info(f"Processing WebApp data: {action_type} | {prompt[:50]}...")
+        safe_prompt = str(prompt)[:50] if prompt else "None"
+        print(f"DEBUG REBOOT: Processing WebApp data: {action_type} | {safe_prompt}...")
+        logger.info(f"Processing WebApp data: {action_type} | {safe_prompt}...")
 
         if action_type == 'image':
             from services.gemini import gemini_service
@@ -35,7 +35,7 @@ async def handle_web_app_data(message: types.Message):
             model_id = settings.MODELS['image']
             aspect_ratio = params.get('aspectRatio', '1:1')
             
-            await message.answer(f"🎨 Рисую изображение ({aspect_ratio})...\nПромт: <i>{prompt[:100]}</i>")
+            await message.answer(f"🎨 Рисую изображение ({aspect_ratio})...\nПромт: <i>{safe_prompt}</i>")
             
             # Generate image
             image_bytes = await gemini_service.generate_image(prompt, aspect_ratio=aspect_ratio)
@@ -99,7 +99,7 @@ async def handle_web_app_data(message: types.Message):
             from services.veo import veo_service
             
             model_id = settings.MODELS['video']
-            await message.answer(f"🎥 Запускаю видео-генерацию (Veo)...\nЭто займет 1-2 минуты. Пожалуйста, подождите.")
+            await message.answer("🎥 Запускаю видео-генерацию (Veo)...\nЭто займет 1-2 минуты. Пожалуйста, подождите.")
             
             video_bytes = await veo_service.generate_video(prompt)
             
@@ -111,5 +111,5 @@ async def handle_web_app_data(message: types.Message):
                  await message.answer("❌ Не удалось сгенерировать видео. \nВозможно, временная ошибка API или лимит генераций.")
 
     except Exception as e:
-        logger.error(f"Error in reboot webapp_data handler: {e}")
+        logger.exception("Error in webapp_data handler")
         await message.answer(f"❌ Системная ошибка: {str(e)}")
