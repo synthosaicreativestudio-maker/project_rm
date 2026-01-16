@@ -51,15 +51,16 @@ async def handle_web_app_data(message: types.Message):
             from services.veo import veo_service
             
             model_id = settings.MODELS['video']
-            await message.answer(f"🎥 Запускаю видео-генерацию ({model_id})...\nЭто может занять время.")
+            await message.answer(f"🎥 Запускаю видео-генерацию (Veo)...\nЭто займет 1-2 минуты. Пожалуйста, подождите.")
             
-            video_uri = await veo_service.generate_video(prompt)
+            video_bytes = await veo_service.generate_video(prompt)
             
-            if video_uri:
-                 await message.answer(f"🎬 Видео готово! \nРезультат (GCS URI): {video_uri}")
-                 await message.answer("ℹ️ (В MVP видео присылается как ссылка. Полноценная загрузка файла будет добавлена позже.)")
+            if video_bytes:
+                 from aiogram.types import BufferedInputFile
+                 video_file = BufferedInputFile(video_bytes, filename="generated_video.mp4")
+                 await message.answer_video(video=video_file, caption=f"🎬 Ваше видео готово!\nПромт: <i>{prompt[:50]}...</i>")
             else:
-                 await message.answer("❌ Ошибка квоты или доступа к Veo API. Попробуйте позже.")
+                 await message.answer("❌ Не удалось сгенерировать видео. \nВозможно, временная ошибка API или лимит генераций.")
 
     except Exception as e:
         logger.error(f"Error in reboot webapp_data handler: {e}")

@@ -22,3 +22,9 @@ build/
 # Logs
 *.log
 marketing-469506-95611014aab8.json
+
+# Test & Temp Scripts (Security)
+test_*.py
+check_keys.py
+list_models_new_sdk.py
+diagnostic_*.py

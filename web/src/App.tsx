@@ -46,7 +46,8 @@ function App() {
                 fields: [
                     { id: "subject", label: "Субъект", type: "select-or-type", placeholder: "Кто или что в кадре?", options: ["Портрет девушки", "Футуристический автомобиль", "Кот в костюме"] },
                     { id: "action", label: "Действие", type: "select-or-type", placeholder: "Что делает?", options: ["Стоит", "Бежит", "Летит", "Сидит", "Танцует"] },
-                    { id: "environment", label: "Окружение", type: "select-or-type", placeholder: "Где находится?", options: ["Студийный фон", "Улица", "Космос", "Интерьер", "Природа"] }
+                    { id: "environment", label: "Окружение", type: "select-or-type", placeholder: "Где находится?", options: ["Студийный фон", "Улица", "Космос", "Интерьер", "Природа"] },
+                    { id: "time_of_day", label: "Время суток", type: "select-or-type", placeholder: "Когда происходит действие?", options: ["Рассвет (Dawn)", "Утро (Morning)", "Золотой час (Golden Hour)", "Полдень (Noon)", "Закат (Sunset)", "Синий час (Blue Hour)", "Сумерки (Twilight)", "Ночь (Night)"] }
                 ]
             },
             {
@@ -150,6 +151,7 @@ function App() {
             if (d.subject) parts.push(getVal('subject') as string)
             if (d.action) parts.push(getVal('action') as string)
             if (d.environment) parts.push("in " + getVal('environment'))
+            if (d.time_of_day) parts.push("during " + getVal('time_of_day'))
 
             // 2. Visuals
             if (d.style) parts.push(getVal('style') + " style")
