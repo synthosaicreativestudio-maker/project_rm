@@ -25,7 +25,7 @@ interface Config {
 function App() {
     const [activeTab, setActiveTab] = useState('image')
     // const [input, setInput] = useState('') // Removed chat input
-    const [isLoading, setIsLoading] = useState(false)
+    // const [isLoading, setIsLoading] = useState(false) // Removed due to lack of use in simplified version
 
     // Dynamic State
     const [config, setConfig] = useState<Config | null>(null)
@@ -37,78 +37,58 @@ function App() {
     const [videoOrientation, setVideoOrientation] = useState('9:16')
     const [videoRef, setVideoRef] = useState<File | null>(null)
 
-    // Fetch Config on Mount
-    useEffect(() => {
-        fetch('/api/config')
-            .then(res => res.json())
-            .then(data => {
-                setConfig(data)
-                // Initialize formData with defaults or empty strings
-                const initialData: Record<string, string> = {}
-                data.blocks.forEach((block: Block) => {
-                    block.fields.forEach((field: Field) => {
-                        initialData[field.id] = ''
-                        // Set default for specific fields if needed, e.g. Style
-                        if (field.id === 'style') initialData[field.id] = 'Реализм'
-                    })
-                })
-                // Merge with existing if needed, but here we just set it
-                setFormData(prev => ({ ...initialData, ...prev }))
-            })
-            .catch(err => {
-                console.error("Failed to load config:", err)
-                // Fallback Config for Mobile/Offline (Full Sync with Backend)
-                const fallbackConfig: Config = {
-                    blocks: [
-                        {
-                            id: "subject_block",
-                            title: "1. Сюжет (База)",
-                            fields: [
-                                { id: "subject", label: "Субъект", type: "select-or-type", placeholder: "Кто или что в кадре?", options: ["Портрет девушки", "Футуристический автомобиль", "Кот в костюме"] },
-                                { id: "action", label: "Действие", type: "select-or-type", placeholder: "Что делает?", options: ["Стоит", "Бежит", "Летит", "Сидит", "Танцует"] },
-                                { id: "environment", label: "Окружение", type: "select-or-type", placeholder: "Где находится?", options: ["Студийный фон", "Улица", "Космос", "Интерьер", "Природа"] }
-                            ]
-                        },
-                        {
-                            id: "style_block",
-                            title: "2. Стилизация (Visuals)",
-                            fields: [
-                                { id: "style", label: "Стиль", type: "select", options: ["Фотореализм", "Студийное фото", "3D Рендер (Pixar / Disney)", "Киберпанк", "Аниме / Манга", "Масляная живопись", "Акварельный рисунок", "Карандашный набросок", "Векторная иллюстрация", "Полароид (Винтаж)"] },
-                                { id: "materials", label: "Материалы", type: "select-or-type", placeholder: "Из чего сделано?", options: ["Реалистичная кожа (Human Skin)", "Глянцевый пластик (Glossy Plastic)", "Матовый пластик (Matte Plastic)", "Матовая глина (Clay)", "Шлифованный металл (Brushed Metal)", "Ржавый металл (Rusted Metal)", "Золото / Хром (Gold/Chrome)", "Стекло / Хрусталь (Glass)", "Мягкая ткань / Шелк (Silk/Fabric)", "Грубый камень / Бетон (Concrete)", "Карбон (Carbon Fiber)", "Неоновые трубки (Neon Tubes)", "Мех / Пух (Fur/Fluffy)", "Органическая слизь (Organic Slime)"] },
-                                { id: "lighting", label: "Освещение", type: "select-or-type", placeholder: "Какой свет?", options: ["Мягкий дневной свет (Soft Daylight)", "Студийный свет (Softbox)", "Жесткое солнце (Hard Sunlight)", "Золотой час (Golden Hour)", "Синий час (Blue Hour)", "Кинематографичное (Cinematic/Low key)", "Неоновый свет (Neon)", "Рембрандтовский свет (Rembrandt)", "Объемные лучи (God Rays)"] },
-                                { id: "colors", label: "Цветовая гамма", type: "select-or-type", placeholder: "Какие цвета?", options: ["Теплая / Пастельная (Warm/Pastel)", "Холодная / Мрачная (Cold/Moody)", "Черно-белая (Noir/Monochrome)", "Яркая / Кислотная (Vivid/Acid)", "Приглушенная / Винтажная (Muted/Vintage)", "Teal & Orange (Кино-блокбастер)", "Vaporwave (Розовый/Бирюзовый)", "Готическая (Черный/Красный)", "Землистая (Коричневый/Зеленый)"] }
-                            ]
-                        },
-                        {
-                            id: "camera_block",
-                            title: "3. Камера (Camera Tech)",
-                            fields: [
-                                { id: "camera_angle", label: "Ракурс", type: "select", options: ["На уровне глаз (Eye Level)", "Вид снизу (Low Angle)", "Вид сверху (High Angle)", "Вид с дрона (Bird's Eye)", "Вид с земли (Worm's Eye)", "Вид из глаз (POV)", "Селфи (Selfie)", "Из-за плеча (Over-the-shoulder)", "Голландский угол (Dutch Angle/Tilt)"] },
-                                { id: "shot_size", label: "Крупность плана", type: "select", options: ["Экстремально крупный (Macro/Eye detail)", "Крупный план (Close-up Face)", "Портрет по плечи (Portrait)", "Средний план (Medium Shot / Waist up)", "Ковбойский план (Knees up)", "Полный рост (Full Body)", "Общий план (Wide Shot)", "Дальний план (Extreme Long Shot)"] },
-                                { id: "focus", label: "Фокус и Глубина", type: "select", options: ["Размытый фон (Bokeh / f1.8)", "Всё в резкости (Deep Focus / f22)", "Макро-съемка (Macro Lens)", "Тилт-шифт (Tilt-Shift / Miniature effect)", "Размытие в движении (Motion Blur)"] }
-                            ]
-                        },
-                        {
-                            id: "filters_block",
-                            title: "4. Фильтры (Filters)",
-                            fields: [
-                                { id: "negative_prompt", label: "Негативный промпт", type: "multi-select", placeholder: "Чего НЕ надо?", options: ["Стандартный фильтр (Убрать уродства, мусор, артефакты)", "Без текста (Убрать водяные знаки, подписи, логотипы)", "Только HD (Убрать размытие, шум, низкое качество)", "Анатомический фильтр (Исправить пальцы, лишние конечности — для людей)", "Композиционный (Без обрезки головы, объект в центре)", "Без людей (Только пейзаж/фон)", "Без 3D/Мультяшности (Только фотореализм)"] }
-                            ]
-                        }
-                    ]
-                }
-                setConfig(fallbackConfig)
+    // Simplified Config for Local UI
+    const fallbackConfig: Config = {
+        blocks: [
+            {
+                id: "subject_block",
+                title: "1. Сюжет (База)",
+                fields: [
+                    { id: "subject", label: "Субъект", type: "select-or-type", placeholder: "Кто или что в кадре?", options: ["Портрет девушки", "Футуристический автомобиль", "Кот в костюме"] },
+                    { id: "action", label: "Действие", type: "select-or-type", placeholder: "Что делает?", options: ["Стоит", "Бежит", "Летит", "Сидит", "Танцует"] },
+                    { id: "environment", label: "Окружение", type: "select-or-type", placeholder: "Где находится?", options: ["Студийный фон", "Улица", "Космос", "Интерьер", "Природа"] }
+                ]
+            },
+            {
+                id: "style_block",
+                title: "2. Стилизация (Visuals)",
+                fields: [
+                    { id: "style", label: "Стиль", type: "select", options: ["Фотореализм", "Студийное фото", "3D Рендер (Pixar / Disney)", "Киберпанк", "Аниме / Манга", "Масляная живопись", "Акварельный рисунок", "Карандашный набросок", "Векторная иллюстрация", "Полароид (Винтаж)"] },
+                    { id: "materials", label: "Материалы", type: "select-or-type", placeholder: "Из чего сделано?", options: ["Реалистичная кожа (Human Skin)", "Глянцевый пластик (Glossy Plastic)", "Матовый пластик (Matte Plastic)", "Матовая глина (Clay)", "Шлифованный металл (Brushed Metal)", "Ржавый металл (Rusted Metal)", "Золото / Хром (Gold/Chrome)", "Стекло / Хрусталь (Glass)", "Мягкая ткань / Шелк (Silk/Fabric)", "Грубый камень / Бетон (Concrete)", "Карбон (Carbon Fiber)", "Неоновые трубки (Neon Tubes)", "Мех / Пух (Fur/Fluffy)", "Органическая слизь (Organic Slime)"] },
+                    { id: "lighting", label: "Освещение", type: "select-or-type", placeholder: "Какой свет?", options: ["Мягкий дневной свет (Soft Daylight)", "Студийный свет (Softbox)", "Жесткое солнце (Hard Sunlight)", "Золотой час (Golden Hour)", "Синий час (Blue Hour)", "Кинематографичное (Cinematic/Low key)", "Неоновый свет (Neon)", "Рембрандтовский свет (Rembrandt)", "Объемные лучи (God Rays)"] },
+                    { id: "colors", label: "Цветовая гамма", type: "select-or-type", placeholder: "Какие цвета?", options: ["Теплая / Пастельная (Warm/Pastel)", "Холодная / Мрачная (Cold/Moody)", "Черно-белая (Noir/Monochrome)", "Яркая / Кислотная (Vivid/Acid)", "Приглушенная / Винтажная (Muted/Vintage)", "Teal & Orange (Кино-блокбастер)", "Vaporwave (Розовый/Бирюзовый)", "Готическая (Черный/Красный)", "Землистая (Коричневый/Зеленый)"] }
+                ]
+            },
+            {
+                id: "camera_block",
+                title: "3. Камера (Camera Tech)",
+                fields: [
+                    { id: "camera_angle", label: "Ракурс", type: "select", options: ["На уровне глаз (Eye Level)", "Вид снизу (Low Angle)", "Вид сверху (High Angle)", "Вид с дрона (Bird's Eye)", "Вид с земли (Worm's Eye)", "Вид из глаз (POV)", "Селфи (Selfie)", "Из-за плеча (Over-the-shoulder)", "Голландский угол (Dutch Angle/Tilt)"] },
+                    { id: "shot_size", label: "Крупность плана", type: "select", options: ["Экстремально крупный (Macro/Eye detail)", "Крупный план (Close-up Face)", "Портрет по плечи (Portrait)", "Средний план (Medium Shot / Waist up)", "Ковбойский план (Knees up)", "Полный рост (Full Body)", "Общий план (Wide Shot)", "Дальний план (Extreme Long Shot)"] },
+                    { id: "focus", label: "Фокус и Глубина", type: "select", options: ["Размытый фон (Bokeh / f1.8)", "Всё в резкости (Deep Focus / f22)", "Макро-съемка (Macro Lens)", "Тилт-шифт (Tilt-Shift / Miniature effect)", "Размытие в движении (Motion Blur)"] }
+                ]
+            },
+            {
+                id: "filters_block",
+                title: "4. Фильтры (Filters)",
+                fields: [
+                    { id: "negative_prompt", label: "Негативный промпт", type: "multi-select", placeholder: "Чего НЕ надо?", options: ["Стандартный фильтр (Убрать уродства, мусор, артефакты)", "Без текста (Убрать водяные знаки, подписи, логотипы)", "Только HD (Убрать размытие, шум, низкое качество)", "Анатомический фильтр (Исправить пальцы, лишние конечности — для людей)", "Композиционный (Без обрезки головы, объект в центре)", "Без людей (Только пейзаж/фон)", "Без 3D/Мультяшности (Только фотореализм)"] }
+                ]
+            }
+        ]
+    }
 
-                // Initialize ALL fields to prevent crashes
-                const initialData: Record<string, string> = {}
-                fallbackConfig.blocks.forEach(block => {
-                    block.fields.forEach(field => {
-                        initialData[field.id] = ''
-                        if (field.id === 'style') initialData[field.id] = 'Фотореализм'
-                    })
-                })
-                setFormData(initialData)
+    // Initialize Config on Mount (Static)
+    useEffect(() => {
+        setConfig(fallbackConfig)
+        const initialData: Record<string, string> = {}
+        fallbackConfig.blocks.forEach((block: Block) => {
+            block.fields.forEach((field: Field) => {
+                initialData[field.id] = ''
+                if (field.id === 'style') initialData[field.id] = 'Фотореализм'
             })
+        })
+        setFormData(initialData)
     }, [])
 
     const handleInputChange = (id: string, value: string | string[]) => {
@@ -134,29 +114,9 @@ function App() {
         }
     }
 
-    const enhancePrompt = async (type: 'image' | 'video') => {
-        // For image, we might need to construct a prompt from formData first
-        // But for now, let's just support video prompt enhancement or basic image subject
-        const currentPrompt = type === 'image' ? formData['subject'] : videoPrompt
-        if (!currentPrompt || (typeof currentPrompt === 'string' && !currentPrompt.trim())) return
-
-        setIsLoading(true)
-        try {
-            const response = await fetch('/api/enhance-prompt/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: currentPrompt, type })
-            })
-            const data = await response.json()
-            if (type === 'image') {
-                handleInputChange('subject', data.enhanced_prompt)
-            }
-            else setVideoPrompt(data.enhanced_prompt)
-        } catch (error) {
-            console.error(error)
-        } finally {
-            setIsLoading(false)
-        }
+    const enhancePrompt = async () => {
+        const tg = (window as any).Telegram?.WebApp
+        if (tg) tg.showAlert("Эта функция временно отключена для стабильности. Используйте ручной ввод.")
     }
 
     const handleGenerate = (type: 'image' | 'video') => {
@@ -225,42 +185,14 @@ function App() {
             }
         }
 
-        // New Logic: HTTP POST to /api/generate
-        const userId = tg.initDataUnsafe?.user?.id
-
-        if (!userId) {
-            tg.showAlert("Ошибка: Не удалось определить User ID. Запустите через Telegram.")
-            return
-        }
-
-        setIsLoading(true)
-
+        // Send data back to Bot via sendData (MANDATORY for Stability)
         const payload = {
-            user_id: userId,
             type: type,
             prompt: prompt,
             params: type === 'image' ? { aspectRatio: formData['aspectRatio'] || '1:1', resolution: formData['resolution'] || '1K' } : { orientation: videoOrientation }
         }
 
-        fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    tg.close()
-                } else {
-                    tg.showAlert(`Ошибка сервера: ${data.message}`)
-                }
-            })
-            .catch(err => {
-                tg.showAlert(`Ошибка сети: ${err}`)
-            })
-            .finally(() => {
-                setIsLoading(false)
-            })
+        tg.sendData(JSON.stringify(payload))
     }
 
     // Chat function removed
@@ -537,8 +469,8 @@ function App() {
                                         className="w-full glass-input rounded-xl px-4 py-3 text-sm resize-none min-h-[100px] pr-10"
                                     />
                                     <button
-                                        onClick={() => enhancePrompt('video')}
-                                        disabled={isLoading || !videoPrompt}
+                                        onClick={() => enhancePrompt()}
+                                        disabled={!videoPrompt}
                                         className="absolute bottom-2 right-2 p-2 bg-neon-blue/20 rounded-lg text-neon-blue hover:bg-neon-blue/30 disabled:opacity-50 transition-colors"
                                         title="Улучшить с AI"
                                     >

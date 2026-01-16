@@ -43,23 +43,16 @@ async def main():
     try:
         await bot.delete_webhook(drop_pending_updates=True)
         
-    # Set Menu Button
+        # Set Menu Button (Points to GitHub Pages)
         from aiogram.types import MenuButtonWebApp, WebAppInfo
         webapp_url = settings.WEBAPP_URL or "https://synthosaicreativestudio-maker.github.io/project_rm/"
         
-        # Force update by deleting first - REMOVED due to AttributeError
-        # await bot.delete_chat_menu_button()
-        
-        
         await bot.set_chat_menu_button(
-            menu_button=MenuButtonWebApp(text="Open App", web_app=WebAppInfo(url=webapp_url))
+            menu_button=MenuButtonWebApp(text="Студия", web_app=WebAppInfo(url=webapp_url))
         )
         
-        # API Server is now standalone (FastAPI) running on port 8000
-        # See api/main.py
-
-    # Remove menu button (commands)
-        await bot.delete_my_commands()
+        # Note: We are using sendData which requires the ReplyKeyboardMarkup from common.py
+        # The Menu Button above is a quick-access shortcut for viewing.
 
     # Start polling
         logger.info("Start polling")

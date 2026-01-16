@@ -19,14 +19,14 @@ async def command_start_handler(message: types.Message) -> None:
     username = message.from_user.username
     full_name = message.from_user.full_name
 
-    # Use configured WEBAPP_URL or a placeholder if not set
+    # Use configured WEBAPP_URL or GitHub Pages as base
     webapp_url = settings.WEBAPP_URL or "https://synthosaicreativestudio-maker.github.io/project_rm/" 
 
-    from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+    from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 
-    # Use ReplyKeyboardMarkup for sendData compatibility
+    # ReplyKeyboardMarkup is REQUIRED for tg.sendData() to work
     kb = ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text="🚀 Open App", web_app=WebAppInfo(url=webapp_url))]
+        [KeyboardButton(text="🚀 Открыть Студию", web_app=WebAppInfo(url=webapp_url))]
     ], resize_keyboard=True)
 
     async for session in get_db():
@@ -39,17 +39,18 @@ async def command_start_handler(message: types.Message) -> None:
             await session.commit()
             await message.answer(
                 f"Привет, {hbold(full_name)}! 👋\n\n"
-                f"Я — <b>Project_RM</b>, твой персональный AI-консультант и креативный партнер.\n\n"
-                f"<b>Чем я могу помочь?</b>\n"
-                f"🎨 <b>Генерация:</b> Нажми кнопку <b>🚀 Open App</b> внизу экрана, чтобы создавать фото и видео.\n"
-                f"🧠 <b>Идеи:</b> Напиши мне тему, и я придумаю сценарий или промт.\n"
-                f"✨ <b>Улучшение:</b> Я помогу докрутить твои идеи до идеала.\n\n"
-                f"Нажми кнопку в меню клавиатуры, чтобы начать! 🚀",
+                f"Я — <b>Project_RM</b>, твой персональный AI-помощник.\n\n"
+                f"💡 <b>Как пользоваться:</b>\n"
+                f"1. Нажми кнопку <b>🚀 Открыть Студию</b> ниже.\n"
+                f"2. Выбери, что хочешь создать (фото или видео).\n"
+                f"3. Нажми 'Сгенерировать' — я сразу приступлю к работе!\n\n"
+                f"Жду твой первый промпт! 🚀",
                 reply_markup=kb
             )
         else:
             await message.answer(
-                f"С возвращением, {hbold(full_name)}! 👋\nРад тебя видеть снова!",
+                f"С возвращением, {hbold(full_name)}! 👋\n\n"
+                f"Нажми <b>🚀 Открыть Студию</b>, чтобы начать творить.",
                 reply_markup=kb
             )
 
