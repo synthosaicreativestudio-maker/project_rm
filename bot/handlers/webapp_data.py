@@ -104,11 +104,11 @@ async def handle_web_app_data(message: types.Message):
             video_bytes = await veo_service.generate_video(prompt)
             
             if video_bytes:
-                 from aiogram.types import BufferedInputFile
-                 video_file = BufferedInputFile(video_bytes, filename="generated_video.mp4")
-                 await message.answer_video(video=video_file, caption=f"🎬 Ваше видео готово!\nПромт: <i>{prompt[:50]}...</i>")
+                from aiogram.types import BufferedInputFile
+                video_file = BufferedInputFile(video_bytes, filename="generated_video.mp4")
+                await message.answer_video(video=video_file, caption=f"🎬 Ваше видео готово!\nПромт: <i>{safe_prompt}</i>")
             else:
-                 await message.answer("❌ Не удалось сгенерировать видео. \nВозможно, временная ошибка API или лимит генераций.")
+                await message.answer("❌ Не удалось сгенерировать видео. \nВозможно, временная ошибка API или лимит генераций.")
 
     except Exception as e:
         logger.exception("Error in webapp_data handler")
