@@ -39,7 +39,7 @@ function App() {
 
     // Fetch Config on Mount
     useEffect(() => {
-        fetch('http://localhost:8000/api/config')
+        fetch('/api/config')
             .then(res => res.json())
             .then(data => {
                 setConfig(data)
@@ -142,7 +142,7 @@ function App() {
 
         setIsLoading(true)
         try {
-            const response = await fetch('http://localhost:8000/api/enhance-prompt/', {
+            const response = await fetch('/api/enhance-prompt/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: currentPrompt, type })
@@ -242,7 +242,7 @@ function App() {
             params: type === 'image' ? { aspectRatio: formData['aspectRatio'] || '1:1', resolution: formData['resolution'] || '1K' } : { orientation: videoOrientation }
         }
 
-        fetch('http://localhost:8000/api/generate', {
+        fetch('/api/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
