@@ -570,7 +570,7 @@ function App() {
                         <div className="flex flex-col h-full p-4 overflow-y-auto">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-3 rounded-xl bg-neon-purple/10 text-neon-purple">
-                                    <Layers size={214} />
+                                    <Layers size={24} />
                                 </div>
                                 <h2 className="text-2xl font-bold">Генерация по референсу</h2>
                             </div>
@@ -644,6 +644,34 @@ function App() {
                                     <h3 className="text-xs font-bold text-neon-purple/80 uppercase tracking-wider">Настройки Камеры</h3>
                                     <div className="space-y-3">
                                         {config?.blocks.find(b => b.id === 'camera_block')?.fields.map(field => renderField(field))}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                                    <div>
+                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Соотношение сторон</label>
+                                        <select
+                                            value={formData['aspectRatio'] || '9:16'}
+                                            onChange={(e) => handleInputChange('aspectRatio', e.target.value)}
+                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                        >
+                                            <option value="1:1">1:1 (Квадрат)</option>
+                                            <option value="16:9">16:9 (Пейзаж)</option>
+                                            <option value="9:16">9:16 (Сторис)</option>
+                                            <option value="4:3">4:3 (Фото)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-purple-300 font-bold ml-1 mb-1 block">Разрешение</label>
+                                        <select
+                                            value={formData['resolution'] || '1K'}
+                                            onChange={(e) => handleInputChange('resolution', e.target.value)}
+                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-neon-purple/50"
+                                        >
+                                            <option value="1K">1K (Стандарт)</option>
+                                            <option value="2K">2K (HD)</option>
+                                            <option value="4K">4K (Ultra)</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
