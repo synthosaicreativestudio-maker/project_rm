@@ -172,21 +172,19 @@ function App() {
                 return val
             }
 
-            if (d.subject) parts.push(getVal('subject') as string)
-            if (d.action) parts.push(getVal('action') as string)
-            if (d.environment) parts.push("in " + getVal('environment'))
-            if (d.time_of_day) parts.push("during " + getVal('time_of_day'))
-            if (d.atmosphere) parts.push("in " + getVal('atmosphere') + " setting")
-
-            if (d.style) parts.push(getVal('style') + " style")
-            if (d.materials) parts.push("made of " + getVal('materials'))
-            if (d.lighting) parts.push(getVal('lighting') as string)
-            if (d.colors) parts.push(getVal('colors') + " color palette")
-
-            if (d.camera_angle) parts.push("shot from " + getVal('camera_angle'))
-            if (d.shot_size) parts.push(getVal('shot_size') as string)
-            if (d.focus) parts.push(getVal('focus') as string)
-            if (d.textOnPhoto) parts.push(`Text: "${getVal('textOnPhoto')}"`)
+            if (d.subject) parts.push(`Subject: ${getVal('subject')}`)
+            if (d.action) parts.push(`Action: ${getVal('action')}`)
+            if (d.environment) parts.push(`Environment: ${getVal('environment')}`)
+            if (d.time_of_day) parts.push(`Time of Day: ${getVal('time_of_day')}`)
+            if (d.atmosphere) parts.push(`Setting/Atmosphere: ${getVal('atmosphere')}`)
+            if (d.style) parts.push(`Style: ${getVal('style')}`)
+            if (d.materials) parts.push(`Materials: ${getVal('materials')}`)
+            if (d.lighting) parts.push(`Lighting: ${getVal('lighting')}`)
+            if (d.colors) parts.push(`Color Palette: ${getVal('colors')}`)
+            if (d.camera_angle) parts.push(`Camera Angle: ${getVal('camera_angle')}`)
+            if (d.shot_size) parts.push(`Shot Size: ${getVal('shot_size')}`)
+            if (d.focus) parts.push(`Focus/Depth: ${getVal('focus')}`)
+            if (d.textOnPhoto) parts.push(`Text on Photo: "${getVal('textOnPhoto')}"`)
 
             let mainPrompt = parts.join(', ')
 
