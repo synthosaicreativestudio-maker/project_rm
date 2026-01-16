@@ -119,4 +119,59 @@ Output ONLY the resulting prompt string. No explanations.
             logger.error(f"Error generating image with Gemini: {e}")
             return None
 
+    async def generate_image_with_references(
+        self, 
+        prompt: str, 
+        reference_images: List[Image.Image],
+        aspect_ratio: str = "9:16",
+        resolution: str = "1K"
+    ) -> Optional[bytes]:
+        """
+        Generates an image using reference images with Gemini 3 Pro Image Preview.
+        Supports up to 14 reference images.
+        Returns the image bytes.
+        """
+        try:
+            from google import genai
+            from google.genai import types
+            
+            # Initialize new client
+            client = genai.Client(api_key=settings.GEMINI_API_KEY)
+            
+            # Prepare contents: prompt + images
+            contents = [prompt] + reference_images
+            
+            logger.info(
+                f"Generating image with references: {len(reference_images)} images, "
+                f"aspect_ratio={aspect_ratio}, resolution={resolution}"
+            )
+            
+            # Generate with config
+            response = client.models.generate_content(
+                model="gemini-3-pro-image-preview",
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    response_modalities=['TEXT', 'IMAGE'],
+                    image_config=types.ImageConfig(
+                        aspect_ratio=aspect_ratio,
+                        image_size=resolution
+                    )
+                )
+            )
+            
+            # Extract image from response
+            for part in response.parts:
+                if part.text is not None:
+                    logger.info(f"Model response text: {part.text[:100]}...")
+                elif hasattr(part, 'inline_data') and part.inline_data is not None:
+                    return part.inline_data.data
+            
+            logger.warning("No image data found in response.")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error generating image with references: {e}")
+            return None
+
+
 gemini_service = GeminiService()

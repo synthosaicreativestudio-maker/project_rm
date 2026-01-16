@@ -56,7 +56,7 @@ async def handle_web_app_data(message: types.Message):
             main_prompt = data.get('mainPrompt', '')
             references = data.get('references', [])
             
-            await message.answer("🔄 Анализирую референсы и создаю мастер-промпт... Пожалуйста, подождите.")
+            await message.answer("🔄 Загружаю и обрабатываю референсы... Пожалуйста, подождите.")
             
             images = []
             async with aiohttp.ClientSession() as session:
@@ -75,23 +75,36 @@ async def handle_web_app_data(message: types.Message):
                 await message.answer("❌ Недостаточно данных для генерации.")
                 return
 
-            # 1. Synthesize Prompt
-            synthesized_prompt = await gemini_service.synthesize_reference_prompt(main_prompt, references, images)
+            # Build prompt from main_prompt and reference descriptions
+            prompt_parts = []
+            if main_prompt:
+                prompt_parts.append(main_prompt)
             
-            if not synthesized_prompt:
-                 await message.answer("❌ Ошибка при анализе референсов.")
-                 return
-
-            await message.answer(f"📝 Сформулирован промпт:\n<i>{synthesized_prompt[:200]}...</i>\n\n🎨 Запускаю генерацию...")
+            for ref in references:
+                if ref.get('description') and ref.get('url'):
+                    prompt_parts.append(f"From reference image: {ref['description']}")
             
-            # 2. Generate Image
+            final_prompt = ". ".join(prompt_parts) if prompt_parts else "Generate an image based on the provided references"
+            
+            await message.answer(f"🎨 Генерирую изображение по {len(images)} референсам...")
+            
+            # Generate with references using new API
             aspect_ratio = params.get('aspectRatio', '9:16')
-            image_bytes = await gemini_service.generate_image(synthesized_prompt, aspect_ratio=aspect_ratio)
+            resolution = params.get('resolution', '1K')
+            image_bytes = await gemini_service.generate_image_with_references(
+                prompt=final_prompt,
+                reference_images=images,
+                aspect_ratio=aspect_ratio,
+                resolution=resolution
+            )
             
             if image_bytes:
                 from aiogram.types import BufferedInputFile
                 photo_file = BufferedInputFile(image_bytes, filename="ref_generated.png")
-                await message.answer_photo(photo=photo_file, caption=f"✨ Готово по референсам!\nСоотношение: {aspect_ratio}")
+                await message.answer_photo(
+                    photo=photo_file, 
+                    caption=f"✨ Готово по референсам!\nИзображений: {len(images)}\nСоотношение: {aspect_ratio}\nРазрешение: {resolution}"
+                )
             else:
                 await message.answer("❌ Не удалось сгенерировать финальное изображение.")
 
