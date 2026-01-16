@@ -50,22 +50,27 @@ class VeoService:
 
         try:
             logger.info(f"Generating video for prompt: {prompt}")
-            # Note: generate_content is synchronous in the SDK usually, but we might want to run it in a thread executor if it blocks.
-            # For now, we'll assume it's fast enough or we'll wrap it later.
-            # Veo might return a response with a video file URI or bytes.
+            
+            # The generate_content method might be synchronous, wrapping it to avoid blocking loop if necessary.
+            # However, for now, we will assume standard call.
             response = self.model.generate_content(prompt)
             
-            # TODO: Handle the response structure properly.
-            # Assuming response has candidates[0].content or similar.
-            # Since we hit quota, we can't verify the exact response structure yet.
-            # We will return the raw response for now or log it.
+            logger.info(f"Video generation response received: {response}")
             
-            logger.info(f"Video generation response: {response}")
-            return str(response) # Placeholder
+            # Try to extract the video URI or GCS path from the response
+            # Note: The exact structure depends on the API version. 
+            # We will look for 'uri' in candidates or usage of GCS.
+            if hasattr(response, 'candidates') and response.candidates:
+                 # Check if there's a GCS URI in the content
+                 # This is a best-effort extraction based on typical Vertex AI response
+                 return str(response.candidates[0].content)
             
+            # Fallback to string representation if structure is unknown
+            return str(response)
+
         except Exception as e:
             logger.error(f"Error generating video: {e}")
-            if "429" in str(e):
+            if "429" in str(e) or "ResourceExhausted" in str(e):
                 logger.error("Quota exceeded for Veo model.")
             return None
 

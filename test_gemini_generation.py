@@ -1,14 +1,11 @@
-import os
+
 import asyncio
 import google.generativeai as genai
-from dotenv import load_dotenv
+from config.settings import settings
 
-# Load env
-load_dotenv()
-
-API_KEY = os.getenv("GEMINI_API_KEY")
+API_KEY = settings.GEMINI_API_KEY
 if not API_KEY:
-    print("❌ Error: GEMINI_API_KEY not found in .env")
+    print("❌ Error: GEMINI_API_KEY not found in settings")
     exit(1)
 
 genai.configure(api_key=API_KEY)
