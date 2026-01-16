@@ -152,6 +152,7 @@ function App() {
             if (d.action) parts.push(getVal('action') as string)
             if (d.environment) parts.push("in " + getVal('environment'))
             if (d.time_of_day) parts.push("during " + getVal('time_of_day'))
+            if (d.atmosphere) parts.push("in " + getVal('atmosphere') + " setting")
 
             // 2. Visuals
             if (d.style) parts.push(getVal('style') + " style")
