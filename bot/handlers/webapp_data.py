@@ -1,16 +1,11 @@
 import json
 import logging
 from aiogram import Router, F, types
-import google.generativeai as genai
 
 from config.settings import settings
 
 router = Router()
 logger = logging.getLogger(__name__)
-
-# Configure Gemini
-if settings.GEMINI_API_KEY:
-    genai.configure(api_key=settings.GEMINI_API_KEY)
 
 @router.message(F.web_app_data)
 async def handle_web_app_data(message: types.Message):
@@ -56,20 +51,33 @@ async def handle_web_app_data(message: types.Message):
             main_prompt = data.get('mainPrompt', '')
             references = data.get('references', [])
             
+            # Отладочное логирование
+            logger.info(f"[REFERENCE] Received {len(references)} references")
+            for i, ref in enumerate(references):
+                logger.info(f"[REFERENCE] Ref {i}: hasFile={ref.get('hasFile')}, url={ref.get('url')}, description={ref.get('description')}")
+            
             await message.answer("🔄 Загружаю и обрабатываю референсы... Пожалуйста, подождите.")
             
             images = []
             async with aiohttp.ClientSession() as session:
-                for ref in references:
+                for i, ref in enumerate(references):
                     if ref.get('url'):
                         try:
+                            logger.info(f"[REFERENCE] Downloading image {i} from {ref['url'][:50]}...")
                             async with session.get(ref['url']) as resp:
                                 if resp.status == 200:
                                     img_data = await resp.read()
                                     img = Image.open(io.BytesIO(img_data))
                                     images.append(img)
+                                    logger.info(f"[REFERENCE] Successfully loaded image {i}, size: {img.size}")
+                                else:
+                                    logger.error(f"[REFERENCE] HTTP {resp.status} for image {i}")
                         except Exception as e:
                             logger.error(f"Error downloading image {ref['url']}: {e}")
+                    else:
+                        logger.warning(f"[REFERENCE] Ref {i} has no URL (hasFile={ref.get('hasFile')}), skipping")
+
+            logger.info(f"[REFERENCE] Successfully loaded {len(images)} images out of {len(references)} references")
 
             if not images and not main_prompt:
                 await message.answer("❌ Недостаточно данных для генерации.")

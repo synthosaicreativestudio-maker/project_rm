@@ -1,8 +1,10 @@
-import google.generativeai as genai
-from google.generativeai.types import GenerateContentResponse
-from typing import Optional, List
+# Старый API используется только для обратной совместимости в некоторых методах
+from typing import Optional, List, TYPE_CHECKING
 import logging
 from PIL import Image
+
+if TYPE_CHECKING:
+    from google.generativeai.types import GenerateContentResponse
 
 from config.settings import settings
 
@@ -14,8 +16,10 @@ class GeminiService:
             logger.warning("GEMINI_API_KEY is not set. Gemini service will not function correctly.")
             return
         
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        # Using the latest Gemini model
+        # Используем старый API для текстовых моделей (обратная совместимость)
+        import google.generativeai as genai_old
+        genai_old.configure(api_key=settings.GEMINI_API_KEY)
+        
         # System instruction for the bot's persona
         system_instruction = """
 You are Project_RM, an intelligent AI Consultant and Creative Guide.
@@ -40,8 +44,8 @@ Professional, enthusiastic, and helpful. Speak in Russian unless asked otherwise
 Format your response using **HTML tags** supported by Telegram: <b>bold</b>, <i>italic</i>, <code>code</code>, <pre>pre</pre>, <a href='...'>link</a>.
 Do NOT use Markdown (asterisks like **text** or *text*). Use <b>text</b> for bold.
 """
-        self.model = genai.GenerativeModel(settings.MODELS['text'], system_instruction=system_instruction) 
-        self.vision_model = genai.GenerativeModel(settings.MODELS['text'], system_instruction=system_instruction)
+        self.model = genai_old.GenerativeModel(settings.MODELS['text'], system_instruction=system_instruction) 
+        self.vision_model = genai_old.GenerativeModel(settings.MODELS['text'], system_instruction=system_instruction)
 
     async def generate_text(self, prompt: str) -> Optional[str]:
         """
@@ -96,10 +100,10 @@ Output ONLY the resulting prompt string. No explanations.
         Returns the image bytes.
         """
         try:
-            # Initialize the image model on demand or in __init__
-            # Using the model ID from settings or hardcoded as per user request if not in settings
+            # Используем старый API для обратной совместимости
+            import google.generativeai as genai_old
             model_name = settings.MODELS.get("image", "gemini-3-pro-image-preview")
-            image_model = genai.GenerativeModel(model_name)
+            image_model = genai_old.GenerativeModel(model_name)
             
             # Append aspect ratio to prompt for better adherence
             full_prompt = f"{prompt}, aspect ratio {aspect_ratio}"
